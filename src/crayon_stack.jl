@@ -15,18 +15,18 @@ end
 
 function Base.push!(cs::CrayonStack, c::Crayon)
     pc = cs.crayons[end]
-    c_new = 
-    Crayon(c.fg_active        ? c.fg        : pc.fg,
-           c.bg_active        ? c.bg        : pc.bg,
-           c.bold_active      ? c.bold      : pc.bold,
-           c.italics_active   ? c.italics   : pc.italics,
-           c.underline_active ? c.underline : pc.underline,
-           true, true, true, true, true)
+    c_new = Crayon(c.fg_active        ? c.fg        : pc.fg,
+                   c.bg_active        ? c.bg        : pc.bg,
+                   c.bold_active      ? c.bold      : pc.bold,
+                   c.italics_active   ? c.italics   : pc.italics,
+                   c.underline_active ? c.underline : pc.underline,
+                   true, true, true, true, true)
     push!(cs.crayons, c_new)
+    return cs
 end
 
 function Base.pop!(cs::CrayonStack)
     pop!(cs.crayons)
     # Return the currently active crayon so we can use print(pop!(crayonstack), "bla")
-    return cs.crayons[end]
+    return cs
 end
