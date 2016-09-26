@@ -27,7 +27,7 @@ Crayon(;foreground, background, bold, italics, underline)
 The `foreground` and `background` argument can be of three types:
 
 * A `symbol` representing a color. The available colors are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `light_gray`, `default`, `dark_gray`, `light_red`, `light_green`, `light_yellow`, `light_blue`, `light_magenta`, `light_cyan` and `white`. To see the colors in action, try `Crayons.test_system_colors()`. This is supported by most terminals.
-* An integer between 0 and 255. This will To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors()`.
+* An integer between 0 and 255. This will use the 256 color ANSI mode. To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors()`.
 * A tuple of three integers all between 0 and 255. This will be interpreted as a `(r,g,b)` color. To test your terminal, use `Crayons.test_24bit_colors()`. The support for this is currently quite limited but is being improved in terminals continuously, see [here](https://gist.github.com/XVilka/8346728).
 
 The `bold`, `italics` and `underline` keyword arguments all take a `Bool` type and determine if the corresponding style should be enabled or disabled.
