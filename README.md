@@ -48,13 +48,16 @@ print(Crayon(foreground = :red, bold = true), "Red and bold.", NormalCrayon(), "
 
 ## Merging `Crayon`s
 
-Two or more `Crayon`s can be merged resulting in a new `Crayon` that has all the properties of the merged ones. If two `Crayon`s specify the same property then the last token in the argument list is used:
+Two or more `Crayon`s can be merged resulting in a new `Crayon` that has all the properties of the merged ones. This is done with the function `merge(crayons::Crayon...)`. If two `Crayon`s specify the same property then the property of the last `Crayon` in the argument list is used:
 
 ```jl
 r_fg = Crayon(foreground = :red)
 g_bg = Crayon(background = :green)
 merged = merge(r_fg, g_bg)
 print(merged, "Red foreground on green background!")
+bold = Crayon(bold = true)
+three_merged = merge(r_fg, g_bg, bold)
+print(three_merged, "Bold Red foreground on green background!")
 ```
 
 
