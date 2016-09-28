@@ -1,3 +1,5 @@
+__precompile__(true)
+
 module Crayons
 
 export Crayon, CrayonStack, NormalCrayon, merge
