@@ -109,7 +109,7 @@ print(takebuf_string(io))
 # Does not work
 io = IOBuffer()
 stack = CrayonStack(incremental = true)
-push!(stack, Crayon(foreground = :red)) # <- not printing the stack eevn though we modify it!
+push!(stack, Crayon(foreground = :red)) # <- not printing the stack even though we modify it!
 print(io, push!(stack, Crayon(foreground = :red)))
 print(io, stack, "This will not be red")
 print(takebuf_string(io))
