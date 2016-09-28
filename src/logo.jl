@@ -6,6 +6,7 @@ function print_logo(io = STDOUT)
     o = string(Crayon(foreground = :light_magenta))
     n = string(Crayon(foreground = :light_cyan))
     s = string(Crayon(foreground = :dark_gray))
+    res = string(Crayon(reset = true))
 
     str = """
        $(c)██████╗$(r)██████╗  $(a)█████╗ $(y)██╗   ██╗ $(o)██████╗ $(n)███╗   ██╗$(s)███████╗
@@ -13,7 +14,7 @@ function print_logo(io = STDOUT)
       $(c)██║     $(r)██████╔╝$(a)███████║ $(y)╚████╔╝ $(o)██║   ██║$(n)██╔██╗ ██║$(s)███████╗
       $(c)██║     $(r)██╔══██╗$(a)██╔══██║  $(y)╚██╔╝  $(o)██║   ██║$(n)██║╚██╗██║$(s)╚════██║
       $(c)╚██████╗$(r)██║  ██║$(a)██║  ██║   $(y)██║   $(o)╚██████╔╝$(n)██║ ╚████║$(s)███████║
-       $(c)╚═════╝$(r)╚═╝  ╚═╝$(a)╚═╝  ╚═╝   $(y)╚═╝    $(o)╚═════╝ $(n)╚═╝  ╚═══╝$(s)╚══════╝
+       $(c)╚═════╝$(r)╚═╝  ╚═╝$(a)╚═╝  ╚═╝   $(y)╚═╝    $(o)╚═════╝ $(n)╚═╝  ╚═══╝$(s)╚══════╝$(res)
     """
 
     print(io, "\n\n", str, "\n")
