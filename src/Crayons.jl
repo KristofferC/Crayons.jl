@@ -246,6 +246,8 @@ function Base.merge(a::Crayon, b::Crayon)
                   strikethrough)
 end
 
+Base.:*(a::Crayon, b::Crayon) = merge(a, b)
+
 function Base.merge(toks::Crayon...)
     if length(toks) == 0
         return Crayon()
@@ -275,5 +277,7 @@ Base.print_with_color(crayon::Crayon, msg::AbstractString...) =
 include("crayon_stack.jl")
 include("test_prints.jl")
 include("logo.jl")
+include("consts.jl")
+
 end # module
 

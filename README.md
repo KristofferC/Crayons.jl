@@ -39,8 +39,7 @@ The `foreground` and `background` argument can be of three types:
 * A `symbol` representing a color. The available colors are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `light_gray`, `default`, `dark_gray`, `light_red`, `light_green`, `light_yellow`, `light_blue`, `light_magenta`, `light_cyan` and `white`. To see the colors in action, try `Crayons.test_system_colors()`. These colors are supported by almost all terminals.
 * An integer between 0 and 255. This will use the 256 color ANSI escape codes. To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors()`.
 * A tuple of three integers all between 0 and 255. This will be interpreted as a `(r,g,b)` 24 bit color. To test your terminal, use `Crayons.test_24bit_colors()`. The support for this is currently quite limited but is being improved in terminals continuously, see [here](https://gist.github.com/XVilka/8346728).
-
-
+* 
 The other keywords all take a `Bool` type and determine if the corresponding style should be explicitly enabled or disabled:
 
 * `reset` - reset all styles and colors to default
@@ -64,20 +63,26 @@ print(Crayon(negative = true, blink = true, bold = true), "Blinking inverse bold
 print(Crayon(foreground = (100, 100, 255), background = (255, 255, 0)), "Bluish on yellow")
 ```
 
+For simplicity, `Crayon`s for the foreground / background version of the 16 system colors as well as the different styles are ready-made and can be found in the `Crayons.Box` module. They have the name `<COLOR_NAME>_<BG/FG>` (note the uppercase) for the colors and simply `<STYLE>` for the different styles. Calling `using` on the `Crayons.Box` module will bring all these into global scope:
+
+```jl
+using Crayons.Box
+print(GREEN_FG, "This is in green")
+print(BOLD, GREEN_FG, BLUE_BG, "Bold green on blue")
+```
+
 Note: In order for the color sequences to be printed, the Julia REPL needs to have colors activated or alternatively the `ENV` variable `FORCE_COLOR` need to exist.
 
 ## Merging `Crayon`s
 
-Two or more `Crayon`s can be merged resulting in a new `Crayon` that has all the properties of the merged ones. This is done with the function `merge(crayons::Crayon...)`. If two `Crayon`s specify the same property then the property of the last `Crayon` in the argument list is used:
+Two or more `Crayon`s can be merged resulting in a new `Crayon` that has all the properties of the merged ones. This is done with the function `merge(crayons::Crayon...)` or by simply multiplying `Crayon`s using `*`. If two `Crayon`s specify the same property then the property of the last `Crayon` in the argument list is used:
 
 ```jl
 r_fg = Crayon(foreground = :red)
 g_bg = Crayon(background = :green)
 merged = merge(r_fg, g_bg)
 print(merged, "Red foreground on green background!")
-bold = Crayon(bold = true)
-three_merged = merge(r_fg, g_bg, bold)
-print(three_merged, "Bold Red foreground on green background!")
+print(r_fg * g_bg * Crayons.Box.BOLD, "Bold Red foreground on green background!")
 ```
 
 
@@ -114,6 +119,8 @@ print(io, push!(stack, Crayon(foreground = :red)))
 print(io, stack, "This will not be red")
 print(takebuf_string(io))
 ```
+
+The reason why the last example does not work is that the stack notices that there is no state change on the second call to `push!` since we just keep the foreground red and will therefore not print anything. Failing to print the stack after *the first* `push!` means that the terminal state and the stack state is out of sync.
 
 ## Misc
 

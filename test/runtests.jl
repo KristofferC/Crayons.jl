@@ -1,5 +1,7 @@
 using Crayons
+using Crayons.Box
 using Base.Test
+
 
 withenv("FORCE_COLOR" => true) do
 
@@ -98,6 +100,7 @@ pop!(cs) # State change: fg = default
 @test string(merge(Crayon(foreground = :red), Crayon(foreground = :blue))) == string(Crayon(foreground = :blue))
 @test string(merge(Crayon(foreground = :red), Crayon(negative = true))) == string(Crayon(foreground = :red, negative = true))
 
+string(BLACK_BG * WHITE_FG * BOLD) == string(Crayon(foreground = :white, background = :black, bold = true))
 
 # print_with_color
 io = IOBuffer()
