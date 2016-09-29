@@ -7,7 +7,7 @@
 
 [![Build Status](https://travis-ci.org/KristofferC/Crayons.jl.svg?branch=master)](https://travis-ci.org/KristofferC/Crayons.jl) [![codecov](https://codecov.io/gh/KristofferC/Crayons.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/KristofferC/Crayons.jl)
 
-Crayons is a package to make writing strings in different colors and styles to terminals simple. It supports using the 16 system colors, and both the 256 color and 24 bit true color extensions as well as the common text styles implemented in terminals.
+Crayons is a package to make writing strings in different colors and styles to terminals simple. It supports using the 16 system colors, and both the 256 color and 24 bit true color extensions as well as the common text styles implemented in terminals. It is designed to perform well, have no dependencies and load fast (about 10 ms load time after precompilation).
 
 ## Installation
 
