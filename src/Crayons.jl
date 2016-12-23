@@ -2,7 +2,9 @@ __precompile__(true)
 
 module Crayons
 
-export Crayon, CrayonStack, NormalCrayon, merge
+export Crayon, CrayonStack, merge
+
+using Compat
 
 const CSI = "\e["
 const ESCAPED_CSI = "\\e["
@@ -177,8 +179,6 @@ function Crayon(;foreground::Union{Int, Symbol, NTuple{3,Int}} = :nothing,
                   _strikethrough)
 end
 
-@deprecate NormalCrayon() Crayon(reset = true)
-
 # Prints the crayon without the inital and terminating ansi escape sequences
 function _print(io::IO, c::Crayon)
     first_active = true
@@ -265,7 +265,7 @@ function Base.with_output_color(f::Function, crayon::Crayon, io::IO, args...)
     try f(buf, args...)
     finally
         print(buf, inv(crayon))
-        print(io, takebuf_string(buf))
+        print(io, String(take!(buf)))
     end
 end
 

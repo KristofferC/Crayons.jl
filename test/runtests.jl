@@ -1,6 +1,7 @@
 using Crayons
 using Crayons.Box
 using Base.Test
+using Compat
 
 
 withenv("FORCE_COLOR" => true) do
@@ -105,7 +106,7 @@ string(BLACK_BG * WHITE_FG * BOLD) == string(Crayon(foreground = :white, backgro
 # print_with_color
 io = IOBuffer()
 print_with_color(Crayon(foreground = :red), io, "haho")
-@test takebuf_string(io) == string(Crayon(foreground = :red), "haho", inv(Crayon(foreground = :red)))
+@test String(take!(io)) == string(Crayon(foreground = :red), "haho", inv(Crayon(foreground = :red)))
 
 Crayons.test_system_colors(IOBuffer())
 Crayons.test_256_colors(IOBuffer())
