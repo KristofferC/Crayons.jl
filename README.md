@@ -20,7 +20,7 @@ Pkg.add("Crayons")
 The process of printing colored and styled text is simple. First create a `Crayon` and print it to the terminal. This will set up the terminal such that following text printed will be according to the properties of the `Crayon`.
 
 A `Crayon` is created with the keyword only constructor:
-```jl
+```julia
 Crayon(foreground,
        background,
        reset,
@@ -56,7 +56,7 @@ To see text with the different styles active, use `Crayons.test_styles()`
 
 Some examples:
 
-```jl
+```julia
 print(Crayon(foreground = :red), "In red. ", Crayon(bold = true), "Red and bold")
 print(Crayon(foreground = 208, background = :red, bold = true), "Orange bold on red")
 print(Crayon(negative = true, blink = true, bold = true), "Blinking inverse bold")
@@ -65,7 +65,7 @@ print(Crayon(foreground = (100, 100, 255), background = (255, 255, 0)), "Bluish 
 
 For convenience, `Crayon`s for the foreground / background version of the 16 system colors as well as the different styles are ready-made and can be found in the `Crayons.Box` module. They have the name `<COLOR_NAME>_<BG/FG>` (note the uppercase) for the colors and simply `<STYLE>` (same as the keyword argument for that style) for the different styles. Calling `using` on the `Crayons.Box` module will bring all these into global scope:
 
-```jl
+```julia
 using Crayons.Box
 print(GREEN_FG, "This is in green")
 print(BOLD, GREEN_FG, BLUE_BG, "Bold green on blue")
@@ -77,7 +77,7 @@ print(BOLD, GREEN_FG, BLUE_BG, "Bold green on blue")
 
 Two or more `Crayon`s can be merged resulting in a new `Crayon` that has all the properties of the merged ones. This is done with the function `merge(crayons::Crayon...)` or by multiplying `Crayon`s using `*`. If two `Crayon`s specify the same property then the property of the last `Crayon` in the argument list is used:
 
-```jl
+```julia
 r_fg = Crayon(foreground = :red)
 g_bg = Crayon(background = :green)
 merged = merge(r_fg, g_bg)
@@ -90,19 +90,18 @@ print(r_fg * g_bg * Crayons.Box.BOLD, "Bold Red foreground on green background!"
 
 In order to nest colors and styles there is the `ColorStack` type. Simply `push!` `Crayon`s onto the stack and `pop!` them off and the stack will keep track of the current active text properties. The stack is used just like a `Crayon`:
 
-```jl
-r_fg = Crayon(foreground = :red)
-g_bg = Crayon(background = :green)
-merged = merge(r_fg, g_bg)
-print(merged, "Red foreground on green background!")
-bold = Crayon(bold = true)
-three_merged = merge(r_fg, g_bg, bold)
-print(three_merged, "Bold Red foreground on green background!")
+```julia
+stack = CrayonStack()
+print(stack, "normal text")
+print(push!(stack, Crayon(foreground = :red)), "in red")
+print(push!(stack, Crayon(foreground = :blue)), "in blue")
+print(pop!(stack), "in red again")
+print(pop!(stack), "normal text")
 ```
 
 A `CrayonStack` can also be created in `incremental` mode with `CrayonStack(incremental = true)`. In that case the `CrayonStack` will only print the changes that are needed to go from the previous text state to the new state which results in less style codes being printed to the terminal. However, note that this means that the `CrayonStack` need to be printed to the output buffer for *all* changes that is made to it (i.e. both when `push!` and `pop!` is used). The example below shows a working example where all the changes to the stack are printed and one example which will give wrong result since one change is not printed. Both the examples below give the expected result if `incremental = false`.
 
-```jl
+```julia
 # Does work
 io = IOBuffer()
 stack = CrayonStack(incremental = true)
