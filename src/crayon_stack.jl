@@ -6,7 +6,7 @@ end
 
 Base.print(io::IO, cs::CrayonStack) = print(io, cs.crayons[end])
 
-function CrayonStack(; incremental = false)
+function CrayonStack(; incremental::Bool = false)
     CrayonStack(incremental, [Crayon(ANSIColor(9, COLORS_16, !incremental),
                                      ANSIColor(9, COLORS_16, !incremental),
                                      ANSIStyle(false, !incremental),
