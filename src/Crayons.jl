@@ -3,7 +3,6 @@ __precompile__(true)
 module Crayons
 
 export Crayon, CrayonStack, merge
-using Compat
 
 include("crayon.jl")
 include("crayon_stack.jl")

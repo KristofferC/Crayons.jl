@@ -1,8 +1,6 @@
 using Crayons
 using Crayons.Box
 using Base.Test
-using Compat
-
 
 withenv("FORCE_COLOR" => true) do
 
