@@ -108,7 +108,21 @@ io = IOBuffer()
 print_with_color(Crayon(foreground = :red), io, "haho")
 @test String(take!(io)) == string(Crayon(foreground = :red), "haho", inv(Crayon(foreground = :red)))
 
+# Call overloading
+
+@test string(Crayon()("hello")) == "hello"
+@test string(Crayon(bold=true)("hello")) == string(BOLD, "hello", inv(BOLD))
+@test string(Crayon(bold=true, foreground = :red)("hello")) == string(Crayon(foreground=:red, bold=true), "hello", Crayon(foreground=:default, bold=false))
+
+@test string("normal", BOLD("bold", RED_FG("red bold", UNDERLINE("red_underline"), "red bold"), "bold"), "normal" ) ==
+    string("normal", BOLD, "bold", RED_FG, "red bold", UNDERLINE, "red_underline", inv(UNDERLINE), "red bold", inv(RED_FG), "bold", inv(BOLD), "normal")
+
+@test string("normal", BOLD*UNDERLINE("bold_underline", ITALICS*RED_FG("everything"), "bold_underline"), "normal") ==
+    string("normal", Crayon(bold=true, underline=true),"bold_underline", Crayon(italics=true, foreground=:red), "everything", Crayon(italics=false, foreground=:default),
+     "bold_underline", Crayon(bold=false, underline=false), "normal")
+
 Crayons.test_system_colors(IOBuffer())
 Crayons.test_256_colors(IOBuffer())
 Crayons.test_24bit_colors(IOBuffer())
+
 end # withenv
