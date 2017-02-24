@@ -11,6 +11,7 @@
 It supports the 16 system colors, both the 256 color and 24 bit true color extensions, and the different text styles available to terminals.
 The package is designed to perform well, have no dependencies (except `Compat`) and load fast (about 10 ms load time after precompilation).
 
+
 ## Installation
 
 ```jl
@@ -39,34 +40,45 @@ Crayon(foreground,
 
 The `foreground` and `background` argument can be of three types:
 
-* A `symbol` representing a color. The available colors are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `light_gray`, `default`, `dark_gray`, `light_red`, `light_green`, `light_yellow`, `light_blue`, `light_magenta`, `light_cyan` and `white`. To see the colors in action, try `Crayons.test_system_colors()`. These colors are supported by almost all terminals.
-* An integer between 0 and 255. This will use the 256 color ANSI escape codes. To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors(shownumbers::Bool=true)`.
-* A tuple of three integers all between 0 and 255. This will be interpreted as a `(r, g, b)` 24 bit color. To test your terminal, use `Crayons.test_24bit_colors(shownumbers::Bool=false)`. The support for this is currently quite limited but is being improved in terminals continuously, see [here](https://gist.github.com/XVilka/8346728).
+* A `Symbol` representing a color.
+  The available colors are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `light_gray`, `default`, `dark_gray`, `light_red`, `light_green`, `light_yellow`, `light_blue`, `light_magenta`, `light_cyan` and `white`.
+  To see the colors in action, try `Crayons.test_system_colors()`.
+  These colors are supported by almost all terminals.
+* An `Integer` between 0 and 255.
+  This will use the 256 color ANSI escape codes.
+  To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors(shownumbers::Bool=true)`.
+* A `Tuple` of three `Integer`s, all between 0 and 255.
+  This will be interpreted as a `(r, g, b)` 24 bit color.
+  To test your terminals support for 24 bit colors, use `Crayons.test_24bit_colors(shownumbers::Bool=false)`.
+  The support for this is currently quite limited but is being improved in terminals continuously, see [here](https://gist.github.com/XVilka/8346728).
 
-The other keyword arguments all take a `Bool` type and determine wether the corresponding style should be explicitly enabled or disabled:
+The other keyword arguments are all of `Bool` type and determine whether the corresponding style should be explicitly enabled or disabled:
 
-* `reset` - reset all styles and colors to default
-* `bold` - bold text, also brighten the colors on some terminals
-* `faint` - faint text, not widely supported
-* `italics` - italic text, not widely supported
-* `underline` - underlined text
-* `blink` - blinking text
-* `negative` - swap the foreground and background
-* `conceal` - hides the text, not widely supported
-* `strikethrough` - horizontal line through the middle of the text, not widely supported.
+* `reset` -- reset all styles and colors to default
+* `bold` -- bold text, also brighten the colors on some terminals
+* `faint` -- faint text, not widely supported
+* `italics` -- italic text, not widely supported
+* `underline` -- underlined text
+* `blink` -- blinking text
+* `negative` -- swap the foreground and background
+* `conceal` -- hides the text, not widely supported
+* `strikethrough` -- horizontal line through the middle of the text, not widely supported.
 
 To see text with the different styles active, use `Crayons.test_styles()`
 
-By using `:nothing` for a keyword argument, that color or style is inactive and will neither actively enable or disable the color/style.
+By using the symbol `:nothing` for any of the keyword arguments, that color or style is inactive and is thus neither actively enable or disabled.
 
-For simplicity, `Crayon`s for the foreground / background version of the 16 system colors as well as the different styles are ready-made and can be found in the `Crayons.Box` module. They have the name `<COLOR_NAME>_<BG/FG>` for the colors and simply `<STYLE>` for the different styles (note the uppercase). Calling `using` on the `Crayons.Box` module will bring all these into global scope.
+For convenience, `Crayon`s for the foreground / background version of the 16 system colors as well as the different styles are pre-made and can be found in the `Crayons.Box` module.
+They have the name `<COLOR_NAME>_<BG/FG>` for the foreground/background colors and `<STYLE>` for the different styles (note the uppercase).
+Calling `using` on the `Crayons.Box` module will bring all these into global scope.
 
 ### Using the `Crayon`s
 
 The process of printing colored and styled text using *Crayons* is simple.
-By printing a `Crayon` to the terminal, the correct code sequences are printed such that future text takes on the color and style of the printed `Crayon`. For example, try running the code below in the REPL:
+By printing a `Crayon` to the terminal, the correct code sequences are sent to the terminal such that subsequent printed text takes on the color and style of the printed `Crayon`.
+For example, try running the code below in the REPL:
 
-```jl
+```julia
 print(Crayon(foreground = :red), "In red. ", Crayon(bold = true), "Red and bold")
 print(Crayon(foreground = 208, background = :red, bold = true), "Orange bold on red")
 print(Crayon(negative = true, underline = true, bold = true), "Underlined inverse bold")
@@ -77,8 +89,10 @@ print(GREEN_FG, "This is in green")
 print(BOLD, GREEN_FG, BLUE_BG, "Bold green on blue")
 ```
 
-It is also possible to use *call overloading* on created `Crayon`s. The `Crayon` can be called with strings and other `Crayon`s and the colors and styles will correctly nest. Correct end sequences will als be printed so the colors and styles are disabled outside the call scope.
-This functionality is perhaps more clearly showed with some examples:
+It is also possible to use *call overloading* on created `Crayon`s.
+The `Crayon` can be called with strings and other `Crayon`s and the colors and styles will correctly nest.
+Correct end sequences will als be printed so the colors and styles are disabled outside the call scope.
+This functionality is perhaps more clearly shown with some examples:
 
 
 ```julia
@@ -92,13 +106,17 @@ print(GREEN_BG("We ",
       "colors")
      )
 ```
-**Note**: In order for the color sequences to be printed, the Julia REPL needs to have colors activated or alternatively the `ENV` variable `FORCE_COLOR` need to exist.
+
+**Note:** In order for the color sequences to be printed, the Julia REPL needs to have colors activated, either by Julia automatically detecting terminal support or by starting Julia with the `--color=yes` argument.
+Alternatively, if the `ENV` variable `FORCE_COLOR` exist, color sequences are printed no matter what.
 
 ## Merging `Crayon`s
 
-Two or more `Crayon`s can be merged resulting in a new `Crayon` that has all the properties of the merged ones. This is done with the function `merge(crayons::Crayon...)` or by simply multiplying `Crayon`s using `*`. If two `Crayon`s specify the same property then the property of the last `Crayon` in the argument list is used:
+Two or more `Crayon`s can be merged resulting in a new `Crayon` with all the properties of the merged ones.
+This is done with the function `merge(crayons::Crayon...)` or by multiplying `Crayon`s using `*`.
+If two `Crayon`s specify the same property then the property of the last `Crayon` in the argument list is used:
 
-```jl
+```julia
 using Crayons.Box
 r_fg = Crayon(foreground = :red)
 g_bg = Crayon(background = :green)
@@ -114,14 +132,16 @@ print(GREEN_FG("I am a green line ",
 
 ## Misc
 
-The Base function `print_with_color` is extended such that the first argument can also be a `Crayon`.
+The Base function `print_with_color` is extended so that the first argument can also be a `Crayon`.
 
-The function `inv` on a `Crayon` will return a `Crayon` that undos what the first `Crayon` did.
-As an example, `inv(Crayon(bold = true))` will return a `Crayon` that disables bold.
+The function `inv` on a `Crayon` returns a `Crayon` that undos what the `Crayon` in the argument to `inv` does.
+As an example, `inv(Crayon(bold = true))` returns a `Crayon` that disables bold.
 
 ## Advanced nesting of colors and styles
 
-If you want to nest colors and styles through function calls there is the `ColorStack` type. Simply `push!` `Crayon`s onto the stack and `pop!` them off and the stack will keep track of what `Crayon` is active. The stack is used just like a `Crayon`:
+If you want to nest colors and styles through function calls there is the `ColorStack` type.
+Simply `push!` `Crayon`s onto the stack, print text to the stack, and then `pop!` the `Crayons` off. The stack will keep track of what `Crayon` is currently active.
+It is used just like a `Crayon`:
 
 ```julia
 stack = CrayonStack()
@@ -131,8 +151,11 @@ print(push!(stack, Crayon(foreground = :blue)), "in blue")
 print(pop!(stack), "in red again")
 print(pop!(stack), "normal text")
 ```
-
-A `CrayonStack` can also be created in `incremental` mode with `CrayonStack(incremental = true)`. In that case the `CrayonStack` will only print the changes that are needed to go from the previous text state to the new state, which results in less code being printed. However, note that this means that the `CrayonStack` need to be printed to the output buffer for *all* changes that are made to it (i.e. both when `push!` and `pop!` are used). The example below shows a working example where all the changes to the stack is printed and one example which will give wrong result since one change is not printed. Both the examples below work if `incremental = false`.
+A `CrayonStack` can also be created in `incremental` mode by calling `CrayonStack(incremental = true)`.
+In that case, the `CrayonStack` will only print the changes that are needed to go from the previous text state to the new state, which results in less color codes being printed.
+However, note that this means that the `CrayonStack` need to be printed to the output buffer for **all** changes that are made to it (i.e. both when `push!` and `pop!` are used).
+The example below shows a working example where all the changes to the stack are printed and another example, which gives wrong result, since one change is not printed.
+Both the examples below work correctly if `incremental = false`.
 
 ```julia
 # Does work
@@ -152,7 +175,8 @@ print(io, stack, "This will not be red")
 print(takebuf_string(io))
 ```
 
-The reason why the last example does not work is that the stack notices that there is no state change on the second call to `push!` since we just keep the foreground red and will therefore not print anything. Failing to print the stack after *the first* `push!` means that the terminal state and the stack state is out of sync.
+The reason why the last example did not work is because the stack notices that there is no change of text state on the second call to `push!`, since the foreground was just kept red.
+Failing to print the stack after the first `push!` meant that the terminal state and the stack state got out of sync.
 
 ### Related packages:
 
