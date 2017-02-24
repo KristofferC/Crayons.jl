@@ -54,15 +54,15 @@ The `foreground` and `background` argument can be of three types:
 
 The other keyword arguments are all of `Bool` type and determine whether the corresponding style should be explicitly enabled or disabled:
 
-* `reset` -- reset all styles and colors to default
-* `bold` -- bold text, also brighten the colors on some terminals
-* `faint` -- faint text, not widely supported
-* `italics` -- italic text, not widely supported
-* `underline` -- underlined text
-* `blink` -- blinking text
-* `negative` -- swap the foreground and background
-* `conceal` -- hides the text, not widely supported
-* `strikethrough` -- horizontal line through the middle of the text, not widely supported.
+* `reset` — reset all styles and colors to default
+* `bold` — bold text, also brighten the colors on some terminals
+* `faint` — faint text, not widely supported
+* `italics` — italic text, not widely supported
+* `underline` — underlined text
+* `blink` — blinking text
+* `negative` — swap the foreground and background
+* `conceal`— hides the text, not widely supported
+* `strikethrough` — horizontal line through the middle of the text, not widely supported.
 
 To see text with the different styles active, use `Crayons.test_styles()`
 
