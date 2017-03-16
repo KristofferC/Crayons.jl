@@ -124,10 +124,13 @@ merged = merge(r_fg, g_bg)
 print(merged, "Red foreground on green background!")
 print(r_fg * g_bg * Crayons.Box.BOLD, "Bold Red foreground on green background!")
 # Also with call overloading and nesting
-print(GREEN_FG("I am a green line ",
-         BOLD * BLUE_FG * UNDERLINE("with a bold underlined blue substring"),
-      " that becomes green again!"
-        ))
+print(GREEN_FG(
+          "I am a green line ",
+          BOLD * BLUE_FG * UNDERLINE(
+              "with a bold underlined blue substring"
+          ),
+          " that becomes green again!"
+     ))
 ```
 
 ## Misc
