@@ -1,4 +1,4 @@
-immutable CrayonWrapper
+struct CrayonWrapper
     c::Crayon
     v::Vector{Union{CrayonWrapper, String}}
 end

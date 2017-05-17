@@ -30,7 +30,7 @@ COLORS_16,
 COLORS_256,
 COLORS_24BIT)
 
-immutable ANSIColor
+struct ANSIColor
     r::Int # [0-9, 60-69], for 16 colors, 0-255 for 256 colors and 24 bit
     g::Int # [0-255] Only used for 24 bit colors
     b::Int # [0-255] Only used for 24 bit colors
@@ -57,7 +57,7 @@ val(x::ANSIColor) = x.r
 # No point making active if color already is default
 Base.inv(x::ANSIColor) = ANSIColor(9, 0, 0, COLORS_16, x.active && !(x.style == COLORS_16 && x.r == 9))
 
-immutable ANSIStyle
+struct ANSIStyle
     on::Bool
     active::Bool
 end
@@ -69,7 +69,7 @@ ANSIStyle(v::Bool) = ANSIStyle(v, true)
 # No point in setting active if the style is off.
 Base.inv(x::ANSIStyle) = ANSIStyle(false, x.active && x.on)
 
-immutable Crayon
+struct Crayon
     fg::ANSIColor
     bg::ANSIColor
 
