@@ -1,5 +1,5 @@
 # Type for pushing and popping text states
-immutable CrayonStack
+struct CrayonStack
     incremental::Bool
     crayons::Vector{Crayon}
 end
