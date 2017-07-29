@@ -14,7 +14,7 @@ function test_styles(io::IO = STDOUT)
 end
 
 function test_system_colors(io::IO = STDOUT)
-    for col in keys(COLORS)
+    for col in map(first,sort(collect(COLORS), by=last))
         print(io, Crayon(foreground = col), lpad("$col", 15, ' '), " ", Crayon(reset = true))
         print(io, Crayon(background = col), col, Crayon(reset = true), "\n")
     end
