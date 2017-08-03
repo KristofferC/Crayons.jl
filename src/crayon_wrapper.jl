@@ -1,9 +1,9 @@
-immutable CrayonWrapper
+struct CrayonWrapper
     c::Crayon
-    v::Vector{Union{CrayonWrapper, String}}
+    v::Vector{Union{CrayonWrapper,String}}
 end
 
-function (c::Crayon)(args::Union{CrayonWrapper, String}...)
+function (c::Crayon)(args::Union{CrayonWrapper,String}...)
     CrayonWrapper(c, collect(args))
 end
 

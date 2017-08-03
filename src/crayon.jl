@@ -30,7 +30,7 @@ COLORS_16,
 COLORS_256,
 COLORS_24BIT)
 
-immutable ANSIColor
+struct ANSIColor
     r::Int # [0-9, 60-69], for 16 colors, 0-255 for 256 colors and 24 bit
     g::Int # [0-255] Only used for 24 bit colors
     b::Int # [0-255] Only used for 24 bit colors
@@ -40,7 +40,7 @@ immutable ANSIColor
         for v in (r, g, b)
             !(0 <= v <= 255) && throw(ArgumentError("Only colors between 0 and 255 allowed"))
         end
-    return new(r, g, b, style, active)
+        return new(r, g, b, style, active)
     end
 end
 
@@ -57,7 +57,7 @@ val(x::ANSIColor) = x.r
 # No point making active if color already is default
 Base.inv(x::ANSIColor) = ANSIColor(9, 0, 0, COLORS_16, x.active && !(x.style == COLORS_16 && x.r == 9))
 
-immutable ANSIStyle
+struct ANSIStyle
     on::Bool
     active::Bool
 end
@@ -69,7 +69,7 @@ ANSIStyle(v::Bool) = ANSIStyle(v, true)
 # No point in setting active if the style is off.
 Base.inv(x::ANSIStyle) = ANSIStyle(false, x.active && x.on)
 
-immutable Crayon
+struct Crayon
     fg::ANSIColor
     bg::ANSIColor
 
@@ -84,9 +84,8 @@ immutable Crayon
     strikethrough::ANSIStyle
 end
 
-anyactive(x::Crayon) = ( (x.reset.active && x.reset.on) || x.fg.active        || x.bg.active    || x.bold.active     || x.faint.active   ||
-                        x.italics.active || x.underline.active || x.blink.active || x.negative.active || x.conceal.active ||
-                        x.strikethrough.active)
+anyactive(x::Crayon) = ( (x.reset.active && x.reset.on)         || x.fg.active    || x.bg.active       || x.bold.active    || x.faint.active ||
+                         x.italics.active || x.underline.active || x.blink.active || x.negative.active || x.conceal.active || x.strikethrough.active)
 
 Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point taking inverse of reset,
                              inv(c.bold), inv(c.faint), inv(c.italics), inv(c.underline),

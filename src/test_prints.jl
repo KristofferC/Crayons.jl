@@ -8,7 +8,7 @@ function test_styles(io::IO = STDOUT)
                   :conceal,
                   :strikethrough)
         print(io, Crayon(;(style, true)), "Printed with $style = true", Crayon(reset = true))
-        style == :conceal &&print(io, "  <- This is concealed = true")
+        style == :conceal && print(io, "  <- This is concealed = true")
         println(io)
     end
 end
@@ -28,7 +28,7 @@ function test_256_colors(io::IO, codes::Bool)
     for c in 0:15
         str = codes ? string(lpad(c, 3, '0'), " ") : "██"
         print(io, Crayon(foreground = c), str, Crayon(reset = true))
-        (c+1) % 8 == 0 && println(io)
+        (c + 1) % 8 == 0 && println(io)
     end
     print(io, "\n\n")
 
@@ -56,10 +56,10 @@ function test_24bit_colors(io::IO, codes::Bool)
         for g in steps
             for b in steps
                 str = codes ? string(lpad(r, 3, '0'), "|", lpad(g, 3, '0'), "|", lpad(b, 3, '0'), " ") : "██"
-                print(io, Crayon(; foreground = (r,g,b)), str, Crayon(reset = true))
+                print(io, Crayon(; foreground = (r, g, b)), str, Crayon(reset = true))
             end
-        println(io)
+            println(io)
         end
-    println(io)
+        println(io)
     end
 end
