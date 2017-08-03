@@ -40,7 +40,7 @@ struct ANSIColor
         for v in (r, g, b)
             !(0 <= v <= 255) && throw(ArgumentError("Only colors between 0 and 255 allowed"))
         end
-    return new(r, g, b, style, active)
+        return new(r, g, b, style, active)
     end
 end
 
@@ -84,9 +84,8 @@ struct Crayon
     strikethrough::ANSIStyle
 end
 
-anyactive(x::Crayon) = ( (x.reset.active && x.reset.on) || x.fg.active        || x.bg.active    || x.bold.active     || x.faint.active   ||
-                        x.italics.active || x.underline.active || x.blink.active || x.negative.active || x.conceal.active ||
-                        x.strikethrough.active)
+anyactive(x::Crayon) = ( (x.reset.active && x.reset.on)         || x.fg.active    || x.bg.active       || x.bold.active    || x.faint.active ||
+                         x.italics.active || x.underline.active || x.blink.active || x.negative.active || x.conceal.active || x.strikethrough.active)
 
 Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point taking inverse of reset,
                              inv(c.bold), inv(c.faint), inv(c.italics), inv(c.underline),
