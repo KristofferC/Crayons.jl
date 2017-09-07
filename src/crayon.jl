@@ -108,22 +108,30 @@ function Base.show(io::IO, x::Crayon)
     end
 end
 
-function _parse_color(c::Union{Int, Symbol, NTuple{3,Int}})
+_ishex(c::Char) = isdigit(c) || ('a' <= c <= 'f') || ('A' <= c <= 'F')
+_torgb(hex::UInt32) = Int(hex << 8 >> 24), Int(hex << 16 >> 24), Int(hex << 24 >> 24)
+
+function _parse_color(c::Union{Integer, Symbol, NTuple{3,Integer}, UInt32})
     ansicol = ANSIColor()
     if c != :nothing
         if isa(c, Symbol)
             ansicol = ANSIColor(COLORS[c], COLORS_16)
-        elseif isa(c, Int)
+        elseif isa(c, UInt32)
+            r, g, b = _torgb(c)
+            ansicol = ANSIColor(r, g, b, COLORS_24BIT)
+        elseif isa(c, Integer)
             ansicol = ANSIColor(c, COLORS_256)
-        else
+        elseif isa(c, NTuple{3, Integer})
             ansicol = ANSIColor(c[1], c[2], c[3], COLORS_24BIT)
+        else
+            error("should not happen")
         end
     end
     return ansicol
 end
 
-function Crayon(;foreground::Union{Int, Symbol, NTuple{3,Int}} = :nothing,
-                 background::Union{Int, Symbol, NTuple{3,Int}} = :nothing,
+function Crayon(;foreground::Union{Int, Symbol, NTuple{3,Integer}, UInt32} = :nothing,
+                 background::Union{Int, Symbol, NTuple{3,Integer}, UInt32} = :nothing,
                  reset = :nothing,
                  bold = :nothing,
                  faint = :nothing,

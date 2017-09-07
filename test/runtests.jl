@@ -50,6 +50,11 @@ Crayons.print_logo()
 @test string(Crayon(foreground = :red, background = (10,20,30))) == "\e[31;48;2;10;20;30m"
 @test string(Crayon(foreground = :60, background = (10,20,30))) == "\e[38;5;60;48;2;10;20;30m"
 
+# Hex colors
+@test string(Crayon(foreground = 0x000000)) ==  string(Crayon(foreground = (0,0,0)))
+@test string(Crayon(foreground = 0xffffff)) ==  string(Crayon(foreground = (255,255,255)))
+@test string(Crayon(foreground = 0xffaadd)) ==  string(Crayon(foreground = (255,170,221)))
+
 # CrayonStack
 cs = CrayonStack()
 @test string(cs) == string(Crayon(foreground = :default, background = :default, bold = false, italics = false, underline = false, strikethrough = false, blink = false, conceal = false, negative = false, faint = false))
