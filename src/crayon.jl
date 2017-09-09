@@ -38,7 +38,7 @@ struct ANSIColor
     active::Bool
     function ANSIColor(r::Int, g::Int = 0, b::Int = 0, style::ColorMode = COLORS_16, active = true)
         for v in (r, g, b)
-            !(0 <= v <= 255) && throw(ArgumentError("Only colors between 0 and 255 allowed"))
+            !(0 <= v <= 255) && throw(ArgumentError("RGB color component has to be between 0 and 255"))
         end
         return new(r, g, b, style, active)
     end
@@ -84,7 +84,7 @@ struct Crayon
     strikethrough::ANSIStyle
 end
 
-anyactive(x::Crayon) = ( (x.reset.active && x.reset.on)         || x.fg.active    || x.bg.active       || x.bold.active    || x.faint.active ||
+anyactive(x::Crayon) = ((x.reset.active && x.reset.on)          || x.fg.active    || x.bg.active       || x.bold.active    || x.faint.active ||
                          x.italics.active || x.underline.active || x.blink.active || x.negative.active || x.conceal.active || x.strikethrough.active)
 
 Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point taking inverse of reset,
@@ -111,7 +111,7 @@ end
 _ishex(c::Char) = isdigit(c) || ('a' <= c <= 'f') || ('A' <= c <= 'F')
 _torgb(hex::UInt32) = Int(hex << 8 >> 24), Int(hex << 16 >> 24), Int(hex << 24 >> 24)
 
-function _parse_color(c::Union{Integer, Symbol, NTuple{3,Integer}, UInt32})
+function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32})
     ansicol = ANSIColor()
     if c != :nothing
         if isa(c, Symbol)
@@ -121,7 +121,7 @@ function _parse_color(c::Union{Integer, Symbol, NTuple{3,Integer}, UInt32})
             ansicol = ANSIColor(r, g, b, COLORS_24BIT)
         elseif isa(c, Integer)
             ansicol = ANSIColor(c, COLORS_256)
-        elseif isa(c, NTuple{3, Integer})
+        elseif isa(c, NTuple{3,Integer})
             ansicol = ANSIColor(c[1], c[2], c[3], COLORS_24BIT)
         else
             error("should not happen")
@@ -130,8 +130,8 @@ function _parse_color(c::Union{Integer, Symbol, NTuple{3,Integer}, UInt32})
     return ansicol
 end
 
-function Crayon(;foreground::Union{Int, Symbol, NTuple{3,Integer}, UInt32} = :nothing,
-                 background::Union{Int, Symbol, NTuple{3,Integer}, UInt32} = :nothing,
+function Crayon(;foreground::Union{Int,Symbol,NTuple{3,Integer},UInt32} = :nothing,
+                 background::Union{Int,Symbol,NTuple{3,Integer},UInt32} = :nothing,
                  reset = :nothing,
                  bold = :nothing,
                  faint = :nothing,
@@ -155,14 +155,14 @@ function Crayon(;foreground::Union{Int, Symbol, NTuple{3,Integer}, UInt32} = :no
     _conceal       = ANSIStyle()
     _strikethrough = ANSIStyle()
 
-    reset         != :nothing && (_reset         = ANSIStyle(reset        ))
-    bold          != :nothing && (_bold          = ANSIStyle(bold         ))
-    faint         != :nothing && (_faint         = ANSIStyle(faint        ))
-    italics       != :nothing && (_italics       = ANSIStyle(italics      ))
-    underline     != :nothing && (_underline     = ANSIStyle(underline    ))
-    blink         != :nothing && (_blink         = ANSIStyle(blink        ))
-    negative      != :nothing && (_negative      = ANSIStyle(negative     ))
-    conceal       != :nothing && (_conceal       = ANSIStyle(conceal      ))
+    reset         != :nothing && (_reset         = ANSIStyle(reset))
+    bold          != :nothing && (_bold          = ANSIStyle(bold))
+    faint         != :nothing && (_faint         = ANSIStyle(faint))
+    italics       != :nothing && (_italics       = ANSIStyle(italics))
+    underline     != :nothing && (_underline     = ANSIStyle(underline))
+    blink         != :nothing && (_blink         = ANSIStyle(blink))
+    negative      != :nothing && (_negative      = ANSIStyle(negative))
+    conceal       != :nothing && (_conceal       = ANSIStyle(conceal))
     strikethrough != :nothing && (_strikethrough = ANSIStyle(strikethrough))
 
     return Crayon(fgcol,
@@ -198,13 +198,13 @@ function _print(io::IO, c::Crayon)
         end
     end
 
-    for (style, val) in ((c.bold         , 1),
-                         (c.faint        , 2),
-                         (c.italics      , 3),
-                         (c.underline    , 4),
-                         (c.blink        , 5),
-                         (c.negative     , 7),
-                         (c.conceal      , 8),
+    for (style, val) in ((c.bold, 1),
+                         (c.faint, 2),
+                         (c.italics, 3),
+                         (c.underline, 4),
+                         (c.blink, 5),
+                         (c.negative, 7),
+                         (c.conceal, 8),
                          (c.strikethrough, 9))
 
         if style.active
@@ -222,7 +222,7 @@ end
 function Base.merge(a::Crayon, b::Crayon)
     fg            = b.fg.active            ? b.fg            : a.fg
     bg            = b.bg.active            ? b.bg            : a.bg
-    reset         = b.reset.active         ? b.reset          : a.reset
+    reset         = b.reset.active         ? b.reset         : a.reset
     bold          = b.bold.active          ? b.bold          : a.bold
     faint         = b.faint.active         ? b.faint         : a.faint
     italics       = b.italics.active       ? b.italics       : a.italics
