@@ -77,11 +77,12 @@ Calling `using` on the `Crayons.Box` module will bring all these into global sco
 **String macros**
 
 `Crayon`s can also be created in a terser way using the [string macro](https://docs.julialang.org/en/stable/manual/metaprogramming/#Non-Standard-String-Literals-1) `crayon`.
-These are written using `crayon"[[fg:]<col>] [bg:<col>] ([[!]<style>], ...")` where:
+These are written using `crayon"[[fg:]<col>] [bg:<col>] ([[!]<style>] ...")` where:
 * text inside a square bracket is optional
 * `<col>` is a color given as a hexadecimal number, `(r,g,b)` tuple (no spaces), a number 0-255, or one of the 16 named colors.
-* `<property>` is one of the styles.
+* `<style>` is one of the styles.
 * `!` means that the style is explicitly disabled.
+* `(<style> ...)` means a repeated number of styles, spearated by spaces.
 
 A few examples of using the string macros and the equivalent constructor is shown below
 
