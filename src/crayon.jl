@@ -1,3 +1,12 @@
+const FORCE_COLOR = Ref(false)
+const FORCE_256_COLORS = Ref(false)
+
+force_color(b::Bool) = FORCE_COLOR[] = b
+force_256_colors(b::Bool) = FORCE_256_COLORS[] = b
+
+_force_color() = FORCE_COLOR[] || haskey(ENV, "FORCE_COLOR")
+_force_256_colors() = FORCE_256_COLORS[] || haskey(ENV, "FORCE_256_COLORS")
+
 const CSI = "\e["
 const ESCAPED_CSI = "\\e["
 const END_ANSI = "m"
@@ -38,7 +47,7 @@ struct ANSIColor
     active::Bool
     function ANSIColor(r::Int, g::Int = 0, b::Int = 0, style::ColorMode = COLORS_16, active = true)
         for v in (r, g, b)
-            !(0 <= v <= 255) && throw(ArgumentError("Only colors between 0 and 255 allowed"))
+            !(0 <= v <= 255) && throw(ArgumentError("RGB color component has to be between 0 and 255"))
         end
         return new(r, g, b, style, active)
     end
@@ -84,7 +93,7 @@ struct Crayon
     strikethrough::ANSIStyle
 end
 
-anyactive(x::Crayon) = ( (x.reset.active && x.reset.on)         || x.fg.active    || x.bg.active       || x.bold.active    || x.faint.active ||
+anyactive(x::Crayon) = ((x.reset.active && x.reset.on)          || x.fg.active    || x.bg.active       || x.bold.active    || x.faint.active ||
                          x.italics.active || x.underline.active || x.blink.active || x.negative.active || x.conceal.active || x.strikethrough.active)
 
 Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point taking inverse of reset,
@@ -92,8 +101,11 @@ Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point takin
                              inv(c.blink), inv(c.negative), inv(c.conceal), inv(c.strikethrough))
 
 function Base.print(io::IO, x::Crayon)
-    if anyactive(x) && (Base.have_color || haskey(ENV, "FORCE_COLOR"))
+    if anyactive(x) && (Base.have_color || _force_color())
         print(io, CSI)
+        if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT) && _force_256_colors()
+            x = _to256(x)
+        end
         _print(io, x)
         print(io, END_ANSI)
     end
@@ -108,22 +120,30 @@ function Base.show(io::IO, x::Crayon)
     end
 end
 
-function _parse_color(c::Union{Int, Symbol, NTuple{3,Int}})
+_ishex(c::Char) = isdigit(c) || ('a' <= c <= 'f') || ('A' <= c <= 'F')
+_torgb(hex::UInt32) = Int(hex << 8 >> 24), Int(hex << 16 >> 24), Int(hex << 24 >> 24)
+
+function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32})
     ansicol = ANSIColor()
     if c != :nothing
         if isa(c, Symbol)
             ansicol = ANSIColor(COLORS[c], COLORS_16)
-        elseif isa(c, Int)
+        elseif isa(c, UInt32)
+            r, g, b = _torgb(c)
+            ansicol = ANSIColor(r, g, b, COLORS_24BIT)
+        elseif isa(c, Integer)
             ansicol = ANSIColor(c, COLORS_256)
-        else
+        elseif isa(c, NTuple{3,Integer})
             ansicol = ANSIColor(c[1], c[2], c[3], COLORS_24BIT)
+        else
+            error("should not happen")
         end
     end
     return ansicol
 end
 
-function Crayon(;foreground::Union{Int, Symbol, NTuple{3,Int}} = :nothing,
-                 background::Union{Int, Symbol, NTuple{3,Int}} = :nothing,
+function Crayon(;foreground::Union{Int,Symbol,NTuple{3,Integer},UInt32} = :nothing,
+                 background::Union{Int,Symbol,NTuple{3,Integer},UInt32} = :nothing,
                  reset = :nothing,
                  bold = :nothing,
                  faint = :nothing,
@@ -147,14 +167,14 @@ function Crayon(;foreground::Union{Int, Symbol, NTuple{3,Int}} = :nothing,
     _conceal       = ANSIStyle()
     _strikethrough = ANSIStyle()
 
-    reset         != :nothing && (_reset         = ANSIStyle(reset        ))
-    bold          != :nothing && (_bold          = ANSIStyle(bold         ))
-    faint         != :nothing && (_faint         = ANSIStyle(faint        ))
-    italics       != :nothing && (_italics       = ANSIStyle(italics      ))
-    underline     != :nothing && (_underline     = ANSIStyle(underline    ))
-    blink         != :nothing && (_blink         = ANSIStyle(blink        ))
-    negative      != :nothing && (_negative      = ANSIStyle(negative     ))
-    conceal       != :nothing && (_conceal       = ANSIStyle(conceal      ))
+    reset         != :nothing && (_reset         = ANSIStyle(reset))
+    bold          != :nothing && (_bold          = ANSIStyle(bold))
+    faint         != :nothing && (_faint         = ANSIStyle(faint))
+    italics       != :nothing && (_italics       = ANSIStyle(italics))
+    underline     != :nothing && (_underline     = ANSIStyle(underline))
+    blink         != :nothing && (_blink         = ANSIStyle(blink))
+    negative      != :nothing && (_negative      = ANSIStyle(negative))
+    conceal       != :nothing && (_conceal       = ANSIStyle(conceal))
     strikethrough != :nothing && (_strikethrough = ANSIStyle(strikethrough))
 
     return Crayon(fgcol,
@@ -190,13 +210,13 @@ function _print(io::IO, c::Crayon)
         end
     end
 
-    for (style, val) in ((c.bold         , 1),
-                         (c.faint        , 2),
-                         (c.italics      , 3),
-                         (c.underline    , 4),
-                         (c.blink        , 5),
-                         (c.negative     , 7),
-                         (c.conceal      , 8),
+    for (style, val) in ((c.bold, 1),
+                         (c.faint, 2),
+                         (c.italics, 3),
+                         (c.underline, 4),
+                         (c.blink, 5),
+                         (c.negative, 7),
+                         (c.conceal, 8),
                          (c.strikethrough, 9))
 
         if style.active
@@ -214,7 +234,7 @@ end
 function Base.merge(a::Crayon, b::Crayon)
     fg            = b.fg.active            ? b.fg            : a.fg
     bg            = b.bg.active            ? b.bg            : a.bg
-    reset         = b.reset.active         ? b.reset          : a.reset
+    reset         = b.reset.active         ? b.reset         : a.reset
     bold          = b.bold.active          ? b.bold          : a.bold
     faint         = b.faint.active         ? b.faint         : a.faint
     italics       = b.italics.active       ? b.italics       : a.italics
@@ -264,3 +284,37 @@ Base.print_with_color(crayon::Crayon, io::IO, msg::AbstractString...) =
     Base.with_output_color(print, crayon, io, msg...)
 Base.print_with_color(crayon::Crayon, msg::AbstractString...) =
     print_with_color(crayon, STDOUT, msg...)
+
+
+# 24bit -> 256 colors
+function _to256(crayon::Crayon)
+    fg = crayon.fg
+    bg = crayon.bg
+    crayon.fg.style == COLORS_24BIT && (fg = _to256(crayon.fg))
+    crayon.bg.style == COLORS_24BIT && (bg = _to256(crayon.bg))
+    return Crayon(
+        fg,
+        bg,
+        crayon.reset,
+        crayon.bold,
+        crayon.faint,
+        crayon.italics,
+        crayon.underline,
+        crayon.blink,
+        crayon.negative,
+        crayon.conceal,
+        crayon.strikethrough,
+    )
+end
+
+function _to256(color::ANSIColor)
+    @assert color.style == COLORS_24BIT
+    r, g, b = color.r, color.g, color.b
+    r24, g24, b24 = map(c->round(Int, c * 23 / 256), (r, g, b))
+    if r24 == g24 == b24
+        return ANSIColor(232 + r24, COLORS_256, color.active)
+    else
+        r6, g6, b6 = map(c->round(Int, c * 5  / 256), (r, g, b))
+        return ANSIColor(16 + 36 * r6 + 6 * g6 + b6, COLORS_256, color.active)
+    end
+end
