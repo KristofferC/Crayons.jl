@@ -55,6 +55,15 @@ Crayons.print_logo()
 @test string(Crayon(foreground = 0xffffff)) ==  string(Crayon(foreground = (255,255,255)))
 @test string(Crayon(foreground = 0xffaadd)) ==  string(Crayon(foreground = (255,170,221)))
 
+# String macro
+@test string(crayon"0xffffff") == string(Crayon(foreground = 0xffffff))
+@test string(crayon"ffffff") == string(Crayon(foreground = 0xffffff))
+@test string(crayon"#ffffff") == string(Crayon(foreground = 0xffffff))
+@test string(crayon"fg:0xffffff") == string(Crayon(foreground = 0xffffff))
+@test string(crayon"bg:0xff00ff fg:0xffffff") == string(Crayon(foreground = 0xffffff, background = 0xff00ff))
+@test string(crayon"bg:red bold !underline") == string(Crayon(background = :red, bold = true, underline = false))
+@test string(crayon"bg:(1,2,3) fg:(2,1,5)") == string(Crayon(background = (1,2,3), foreground = (2,1,5)))
+
 # CrayonStack
 cs = CrayonStack()
 @test string(cs) == string(Crayon(foreground = :default, background = :default, bold = false, italics = false, underline = false, strikethrough = false, blink = false, conceal = false, negative = false, faint = false))
@@ -96,7 +105,6 @@ pop!(cs) # State change: fg = default
 @test string(cs) == string(Crayon(foreground = :default))
 
 # Merge
-
 @test string(merge()) == ""
 @test string(merge(Crayon(foreground = :blue, background = :red))) == string(Crayon(foreground = :blue, background = :red))
 @test string(merge(Crayon(foreground = :blue), Crayon(background = :red)))  == string(Crayon(foreground = :blue, background = :red))
@@ -113,7 +121,6 @@ print_with_color(Crayon(foreground = :red), io, "haho")
 @test String(take!(io)) == string(Crayon(foreground = :red), "haho", inv(Crayon(foreground = :red)))
 
 # Call overloading
-
 @test string(Crayon()("hello")) == "hello"
 @test string(Crayon(bold=true)("hello")) == string(BOLD, "hello", inv(BOLD))
 @test string(Crayon(bold=true, foreground = :red)("hello")) == string(Crayon(foreground=:red, bold=true), "hello", Crayon(foreground=:default, bold=false))

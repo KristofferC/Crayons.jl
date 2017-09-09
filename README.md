@@ -74,6 +74,25 @@ For convenience, `Crayon`s for the foreground / background version of the 16 sys
 They have the name `<COLOR_NAME>_<BG/FG>` for the foreground/background colors and `<STYLE>` for the different styles (note the uppercase).
 Calling `using` on the `Crayons.Box` module will bring all these into global scope.
 
+* String macros*
+
+`Crayon`s can also be created in a terser way using the [string macro](https://docs.julialang.org/en/stable/manual/metaprogramming/#Non-Standard-String-Literals-1) `crayon`.
+These are written using `crayon"[[fg:]<col>] [bg:<col>] ([[!]<style>], ...")` where:
+* text inside a square bracket is optional
+* `<col>` is a color given as a hexadecimal number, `(r,g,b)` tuple (no spaces), a number 0-255, or one of the 16 named colors.
+* `<property>` is one of the styles.
+* `!` means that the style is explicitly disabled.
+
+A few examples of using the string macros and the equivalent constructor is shown below
+
+```julia
+crayon"red" # Crayon(foreground = :red)
+crayon"bg:(255,0,255)" # Crayon(background = (255, 0, 255))
+crayon"!bold underline 0xff00ff" # Crayon(bold = false, underline = true, foreground = 0xff00ff)
+crayon"#0000ff" # Crayon(foreground = 0x0000ff)
+```
+
+
 ### Using the `Crayon`s
 
 The process of printing colored and styled text using *Crayons* is simple.

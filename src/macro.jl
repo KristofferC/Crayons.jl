@@ -14,17 +14,14 @@ macro crayon_str(str::String)
     fgcol = ANSIColor()
     bgcol = ANSIColor()
 
-    parsed_fg = false
     for word in split(str, " ")
         length(word) == 0 && continue
         token = word
-        act = true
-        
+        enabled = true
         parse_state = :style
 
         if word[1] == '!'
-            parse_state = :style
-            act = false
+            enabled = false
             token = word[2:end]
             @goto doparse
         end
@@ -44,79 +41,78 @@ macro crayon_str(str::String)
             end
             @goto doparse
             @label parse_err
-            throw(ArgumentError("should have the format [fg/bg]:color"))
+            return :(throw(ArgumentError("should have the format [fg/bg]:color")))
         end
 
         @label doparse
         if parse_state == :fg_color || parse_state == :bg_color
-            color = _parse_color_str(token)
+            color = _parse_color_string(token)
             if parse_state == :fg_color
                 fgcol = color
-                parsed_fg = true
             else
                 bgcol = color
             end
         elseif parse_state == :style
             if token == "reset"
-                _reset = ANSIStyle(act)
+                _reset = ANSIStyle(enabled)
             elseif token == "bold"
-                _bold = ANSIStyle(act)
+                _bold = ANSIStyle(enabled)
             elseif token == "faint"
-                _faint = ANSIStyle(act)
+                _faint = ANSIStyle(enabled)
             elseif token == "italics"
-                _italics = ANSIStyle(act)
+                _italics = ANSIStyle(enabled)
             elseif token == "underline"
-                _underline = ANSIStyle(act)
+                _underline = ANSIStyle(enabled)
             elseif token == "blink"
-                _blink = ANSIStyle(act)
+                _blink = ANSIStyle(enabled)
             elseif token == "negative"
-                _negative = ANSIStyle(act)
+                _negative = ANSIStyle(enabled)
             elseif token == "conceal"
-                _conceal = ANSIStyle(act)
+                _conceal = ANSIStyle(enabled)
             elseif token == "strikethrough"
-                _strikethrough = ANSIStyle(act)
-            elseif parsed_fg = false
-                fgcol = _parse_color_str(token)
-                parsed_fg = true
-                throw(ArgumentError("unknown style or color $word"))
+                _strikethrough = ANSIStyle(enabled)
+            else
+                fgcol = _parse_color_string(token)
             end
         end
     end
 
-
-    return :(Crayon(
-        $fgcol,
-        $bgcol,
-        $_reset,
-        $_bold,
-        $_faint,
-        $_italics,
-        $_underline,
-        $_blink,
-        $_negative,
-        $_conceal,
-        $_strikethrough,
-    ))
+    return Crayon(
+        fgcol,
+        bgcol,
+        _reset,
+        _bold,
+        _faint,
+        _italics,
+        _underline,
+        _blink,
+        _negative,
+        _conceal,
+        _strikethrough,
+    )
 end
 
-function _parse_color_string(token::String)
-    # if length(token) == 6
-    nhex = tryparse(UInt32, token)
-    !isnull(nhex) && return _parse_color(get(nhex))
+function _parse_color_string(token::AbstractString)
+    if length(token) >= 6
+        tok_hex = token
+        startswith(token, "#") && (tok_hex = token[2:end])
+        !startswith(token, "0x") && (tok_hex = "0x" * tok_hex)
+        nhex = tryparse(UInt32, tok_hex)
+        !isnull(nhex) && return _parse_color(get(nhex))
+    end
     
     nint = tryparse(Int, token)
-    !nint(nhex) && return _parse_color(get(nint))
-
+    !isnull(nint) && return _parse_color(get(nint))
     reg = r"\(([0-9]*),([0-9]*),([0-9]*)\)"
     m = match(reg, token)
     if !(m isa Void)
         r, g, b = m.captures
-        return _parse_color((r, g, b))
+        return _parse_color(parse.(Int, (r, g, b)))
     end
 
-    if Symbol(token) in COLORS
+    if Symbol(token) in keys(COLORS)
         return _parse_color(Symbol(token))
     end
 
-    throw(ArgumentError("could not parse $token as a string"))
+    throw(ArgumentError("could not parse $token as a color"))
 end
