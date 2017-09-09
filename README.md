@@ -51,7 +51,7 @@ The `foreground` and `background` argument can be of three types:
   This will be interpreted as a `(r, g, b)` 24 bit color.
   To test your terminals support for 24 bit colors, use `Crayons.test_24bit_colors(shownumbers::Bool=false)`.
   The support for this is currently quite limited but is being improved in terminals continuously, see [here](https://gist.github.com/XVilka/8346728).
-* An `UInt32` representing a color represented in hexadecimal format.
+* A `UInt32` representing a color given in hexadecimal format.
   Will be converted to the corresponding RGB format.
 
 The other keyword arguments are all of `Bool` type and determine whether the corresponding style should be explicitly enabled or disabled:
