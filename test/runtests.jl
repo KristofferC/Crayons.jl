@@ -64,6 +64,13 @@ Crayons.print_logo()
 @test string(crayon"bg:red bold !underline") == string(Crayon(background = :red, bold = true, underline = false))
 @test string(crayon"bg:(1,2,3) fg:(2,1,5)") == string(Crayon(background = (1,2,3), foreground = (2,1,5)))
 
+#
+withenv("FORCE_256_COLORS" => true) do
+    @test string(crayon"(0,0,255)") == string(Crayon(foreground = 21))
+    @test string(crayon"fg:(0,0,255) bg:(255,0,255)") == string(Crayon(foreground = 21, background = 201))
+end
+    
+
 # CrayonStack
 cs = CrayonStack()
 @test string(cs) == string(Crayon(foreground = :default, background = :default, bold = false, italics = false, underline = false, strikethrough = false, blink = false, conceal = false, negative = false, faint = false))

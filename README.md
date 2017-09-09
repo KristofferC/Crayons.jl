@@ -128,8 +128,12 @@ print(GREEN_BG("We ",
      )
 ```
 
-**Note:** In order for the color sequences to be printed, the Julia REPL needs to have colors activated, either by Julia automatically detecting terminal support or by starting Julia with the `--color=yes` argument.
-Alternatively, if the `ENV` variable `FORCE_COLOR` exist, color sequences are printed no matter what.
+**Note:** In order for the color sequences to be printed, the Julia REPL needs to have colors activated,
+either by Julia automatically detecting terminal support or by starting Julia with the `--color=yes` argument.
+Alternatively, if the `ENV` variable `FORCE_COLOR` exist, or `Crayons.force_color(::Bool)` has been enabled,
+color sequences are printed no matter what. Also, since relatively few terminals support full 24-bit colors,
+it is possible to activate 256 color mode which converts the 24-bit crayon to a 256 color crayon when printed.
+This is done by either defining the variable `FORCE_256_COLORS` or by calling `Crayons.force_256_colors(::Bool)`.
 
 ## Merging `Crayon`s
 
@@ -164,7 +168,8 @@ As an example, `inv(Crayon(bold = true))` returns a `Crayon` that disables bold.
 ## Advanced nesting of colors and styles
 
 If you want to nest colors and styles through function calls there is the `ColorStack` type.
-Simply `push!` `Crayon`s onto the stack, print text to the stack, and then `pop!` the `Crayons` off. The stack will keep track of what `Crayon` is currently active.
+Simply `push!` `Crayon`s onto the stack, print text to the stack, and then `pop!` the `Crayons` off.
+The stack will keep track of what `Crayon` is currently active.
 It is used just like a `Crayon`:
 
 ```julia
@@ -176,9 +181,12 @@ print(pop!(stack), "in red again")
 print(pop!(stack), "normal text")
 ```
 A `CrayonStack` can also be created in `incremental` mode by calling `CrayonStack(incremental = true)`.
-In that case, the `CrayonStack` will only print the changes that are needed to go from the previous text state to the new state, which results in less color codes being printed.
-However, note that this means that the `CrayonStack` need to be printed to the output buffer for **all** changes that are made to it (i.e. both when `push!` and `pop!` are used).
-The example below shows a working example where all the changes to the stack are printed and another example, which gives wrong result, since one change is not printed.
+In that case, the `CrayonStack` will only print the changes that are needed to go from the previous text state to the new state,
+which results in less color codes being printed.
+However, note that this means that the `CrayonStack` need to be printed to the output buffer for **all** changes that are made to it
+(i.e. both when `push!` and `pop!` are used).
+The example below shows a working example where all the changes to the stack are printed and another example, which gives wrong result,
+since one change is not printed.
 Both the examples below work correctly if `incremental = false`.
 
 ```julia

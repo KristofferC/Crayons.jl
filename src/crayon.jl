@@ -1,3 +1,12 @@
+const FORCE_COLOR = Ref(false)
+const FORCE_256_COLORS = Ref(false)
+
+force_color(b::Bool) = FORCE_COLOR[] = b
+force_256_colors(b::Bool) = FORCE_256_COLORS[] = b
+
+_force_color() = FORCE_COLOR[] || haskey(ENV, "FORCE_COLOR")
+_force_256_colors() = FORCE_256_COLORS[] || haskey(ENV, "FORCE_256_COLORS")
+
 const CSI = "\e["
 const ESCAPED_CSI = "\\e["
 const END_ANSI = "m"
@@ -92,8 +101,11 @@ Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point takin
                              inv(c.blink), inv(c.negative), inv(c.conceal), inv(c.strikethrough))
 
 function Base.print(io::IO, x::Crayon)
-    if anyactive(x) && (Base.have_color || haskey(ENV, "FORCE_COLOR"))
+    if anyactive(x) && (Base.have_color || _force_color())
         print(io, CSI)
+        if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT) && _force_256_colors()
+            x = _to256(x)
+        end
         _print(io, x)
         print(io, END_ANSI)
     end
@@ -272,3 +284,37 @@ Base.print_with_color(crayon::Crayon, io::IO, msg::AbstractString...) =
     Base.with_output_color(print, crayon, io, msg...)
 Base.print_with_color(crayon::Crayon, msg::AbstractString...) =
     print_with_color(crayon, STDOUT, msg...)
+
+
+# 24bit -> 256 colors
+function _to256(crayon::Crayon)
+    fg = crayon.fg
+    bg = crayon.bg
+    crayon.fg.style == COLORS_24BIT && (fg = _to256(crayon.fg))
+    crayon.bg.style == COLORS_24BIT && (bg = _to256(crayon.bg))
+    return Crayon(
+        fg,
+        bg,
+        crayon.reset,
+        crayon.bold,
+        crayon.faint,
+        crayon.italics,
+        crayon.underline,
+        crayon.blink,
+        crayon.negative,
+        crayon.conceal,
+        crayon.strikethrough,
+    )
+end
+
+function _to256(color::ANSIColor)
+    @assert color.style == COLORS_24BIT
+    r, g, b = color.r, color.g, color.b
+    r24, g24, b24 = map(c->round(Int, c * 23 / 256), (r, g, b))
+    if r24 == g24 == b24
+        return ANSIColor(232 + r24, COLORS_256, color.active)
+    else
+        r6, g6, b6 = map(c->round(Int, c * 5  / 256), (r, g, b))
+        return ANSIColor(16 + 36 * r6 + 6 * g6 + b6, COLORS_256, color.active)
+    end
+end
