@@ -74,7 +74,7 @@ For convenience, `Crayon`s for the foreground / background version of the 16 sys
 They have the name `<COLOR_NAME>_<BG/FG>` for the foreground/background colors and `<STYLE>` for the different styles (note the uppercase).
 Calling `using` on the `Crayons.Box` module will bring all these into global scope.
 
-* String macros*
+**String macros**
 
 `Crayon`s can also be created in a terser way using the [string macro](https://docs.julialang.org/en/stable/manual/metaprogramming/#Non-Standard-String-Literals-1) `crayon`.
 These are written using `crayon"[[fg:]<col>] [bg:<col>] ([[!]<style>], ...")` where:
