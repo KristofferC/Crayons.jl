@@ -7,7 +7,7 @@ function test_styles(io::IO = STDOUT)
                   :negative,
                   :conceal,
                   :strikethrough)
-        print(io, Crayon(;(style, true)), "Printed with $style = true", Crayon(reset = true))
+        print(io, Crayon(;style => true), "Printed with $style = true", Crayon(reset = true))
         style == :conceal && print(io, "  <- This is concealed = true")
         println(io)
     end
