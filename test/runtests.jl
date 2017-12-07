@@ -1,7 +1,11 @@
 using Crayons
 using Crayons.Box
-using Base.Test
 
+if VERSION < v"0.7.0-DEV.2005"
+    using Base.Test
+else
+    using Test
+end
 
 withenv("FORCE_COLOR" => true) do
 
