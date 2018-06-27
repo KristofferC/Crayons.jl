@@ -98,14 +98,14 @@ function _parse_color_string(token::AbstractString)
         startswith(token, "#") && (tok_hex = token[2:end])
         !startswith(token, "0x") && (tok_hex = "0x" * tok_hex)
         nhex = tryparse(UInt32, tok_hex)
-        !isnull(nhex) && return _parse_color(get(nhex))
+        nhex !== nothing && return _parse_color(nhex)
     end
-    
+
     nint = tryparse(Int, token)
-    !isnull(nint) && return _parse_color(get(nint))
+    nint !== nothing && return _parse_color(nint)
     reg = r"\(([0-9]*),([0-9]*),([0-9]*)\)"
     m = match(reg, token)
-    if !(m isa Void)
+    if m !== nothing
         r, g, b = m.captures
         return _parse_color(parse.(Int, (r, g, b)))
     end
