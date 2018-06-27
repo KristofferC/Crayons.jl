@@ -283,7 +283,7 @@ end
 Base.print_with_color(crayon::Crayon, io::IO, msg::AbstractString...) =
     Base.with_output_color(print, crayon, io, msg...)
 Base.print_with_color(crayon::Crayon, msg::AbstractString...) =
-    print_with_color(crayon, STDOUT, msg...)
+    print_with_color(crayon, stdout, msg...)
 
 
 # 24bit -> 256 colors

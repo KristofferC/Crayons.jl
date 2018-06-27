@@ -1,4 +1,4 @@
-function print_logo(io = STDOUT)
+function print_logo(io = stdout)
     c = string(Crayon(foreground = :light_red))
     r = string(Crayon(foreground = :light_green))
     a = string(Crayon(foreground = :light_yellow))

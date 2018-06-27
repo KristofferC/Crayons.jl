@@ -1,4 +1,4 @@
-function test_styles(io::IO = STDOUT)
+function test_styles(io::IO = stdout)
     for style in (:bold,
                   :faint,
                   :italics,
@@ -13,14 +13,14 @@ function test_styles(io::IO = STDOUT)
     end
 end
 
-function test_system_colors(io::IO = STDOUT)
+function test_system_colors(io::IO = stdout)
     for col in map(first,sort(collect(COLORS), by=last))
         print(io, Crayon(foreground = col), lpad("$col", 15, ' '), " ", Crayon(reset = true))
         print(io, Crayon(background = col), col, Crayon(reset = true), "\n")
     end
 end
 
-test_256_colors(codes::Bool = true) = test_256_colors(STDOUT, codes)
+test_256_colors(codes::Bool = true) = test_256_colors(stdout, codes)
 test_256_colors(io::IO) = test_256_colors(io, true)
 function test_256_colors(io::IO, codes::Bool)
     println(io, "System colors (0..15):")
@@ -48,7 +48,7 @@ function test_256_colors(io::IO, codes::Bool)
     end
 end
 
-test_24bit_colors(codes::Bool = true) = test_24bit_colors(STDOUT, codes)
+test_24bit_colors(codes::Bool = true) = test_24bit_colors(stdout, codes)
 test_24bit_colors(io::IO) = test_24bit_colors(io, true)
 function test_24bit_colors(io::IO, codes::Bool)
     steps = 0:30:255
