@@ -133,6 +133,7 @@ print_with_color(Crayon(foreground = :red), io, "haho")
 
 # Call overloading
 @test string(Crayon()("hello")) == "hello"
+@test string(Crayon()(split("hello world")[1])) == "hello" # test substrings
 @test string(Crayon(bold=true)("hello")) == string(BOLD, "hello", inv(BOLD))
 @test string(Crayon(bold=true, foreground = :red)("hello")) == string(Crayon(foreground=:red, bold=true), "hello", Crayon(foreground=:default, bold=false))
 
