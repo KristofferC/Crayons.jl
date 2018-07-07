@@ -5,7 +5,7 @@ end
 
 function (c::Crayon)(args::Union{CrayonWrapper,AbstractString}...)
     typefix(cw::CrayonWrapper) = cw
-    typefix(str) = String
+    typefix(str) = String(str)
     
     CrayonWrapper(c, typefix.(collect(args)))
 end
