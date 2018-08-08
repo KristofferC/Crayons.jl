@@ -1,5 +1,3 @@
-__precompile__(true)
-
 module Crayons
 
 export Crayon, CrayonStack, merge, @crayon_str
