@@ -93,8 +93,10 @@ struct Crayon
     strikethrough::ANSIStyle
 end
 
-anyactive(x::Crayon) = ((x.reset.active && x.reset.on)          || x.fg.active    || x.bg.active       || x.bold.active    || x.faint.active ||
-                         x.italics.active || x.underline.active || x.blink.active || x.negative.active || x.conceal.active || x.strikethrough.active)
+anyactive(x::Crayon) = ((x.reset.active && x.reset.on) ||
+                        x.fg.active    || x.bg.active       || x.bold.active      ||
+                        x.faint.active || x.italics.active  || x.underline.active ||
+                        x.blink.active || x.negative.active || x.conceal.active   || x.strikethrough.active)
 
 Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point taking inverse of reset,
                              inv(c.bold), inv(c.faint), inv(c.italics), inv(c.underline),
@@ -269,22 +271,6 @@ function Base.merge(toks::Crayon...)
     end
     return tok
 end
-
-function Base.with_output_color(f::Function, crayon::Crayon, io::IO, args...)
-    buf = IOBuffer()
-    print(buf, crayon)
-    try f(buf, args...)
-    finally
-        print(buf, inv(crayon))
-        print(io, String(take!(buf)))
-    end
-end
-
-Base.print_with_color(crayon::Crayon, io::IO, msg::AbstractString...) =
-    Base.with_output_color(print, crayon, io, msg...)
-Base.print_with_color(crayon::Crayon, msg::AbstractString...) =
-    print_with_color(crayon, stdout, msg...)
-
 
 # 24bit -> 256 colors
 function _to256(crayon::Crayon)

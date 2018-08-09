@@ -1,11 +1,6 @@
 using Crayons
 using Crayons.Box
-
-if VERSION < v"0.7.0-DEV.2005"
-    using Base.Test
-else
-    using Test
-end
+using Test
 
 withenv("FORCE_COLOR" => true) do
 
@@ -73,7 +68,6 @@ withenv("FORCE_256_COLORS" => true) do
     @test string(crayon"(0,0,255)") == string(Crayon(foreground = 21))
     @test string(crayon"fg:(0,0,255) bg:(255,0,255)") == string(Crayon(foreground = 21, background = 201))
 end
-    
 
 # CrayonStack
 cs = CrayonStack()
@@ -125,11 +119,6 @@ pop!(cs) # State change: fg = default
 @test string(merge(Crayon(foreground = :red), Crayon(negative = true))) == string(Crayon(foreground = :red, negative = true))
 
 string(BLACK_BG * WHITE_FG * BOLD) == string(Crayon(foreground = :white, background = :black, bold = true))
-
-# print_with_color
-io = IOBuffer()
-print_with_color(Crayon(foreground = :red), io, "haho")
-@test String(take!(io)) == string(Crayon(foreground = :red), "haho", inv(Crayon(foreground = :red)))
 
 # Call overloading
 @test string(Crayon()("hello")) == "hello"
