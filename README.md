@@ -161,8 +161,6 @@ print(GREEN_FG(
 
 ## Misc
 
-The Base function `print_with_color` is extended so that the first argument can also be a `Crayon`.
-
 The function `inv` on a `Crayon` returns a `Crayon` that undos what the `Crayon` in the argument to `inv` does.
 As an example, `inv(Crayon(bold = true))` returns a `Crayon` that disables bold.
 
