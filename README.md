@@ -9,7 +9,7 @@
 
 *Crayons* is a package that makes it simple to write strings in different colors and styles to terminals.
 It supports the 16 system colors, both the 256 color and 24 bit true color extensions, and the different text styles available to terminals.
-The package is designed to perform well, have no dependencies (except `Compat`) and load fast (about 10 ms load time after precompilation).
+The package is designed to perform well, have no dependencies and load fast (about 10 ms load time after precompilation).
 
 
 ## Installation
