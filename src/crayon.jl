@@ -103,7 +103,8 @@ Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point takin
                              inv(c.blink), inv(c.negative), inv(c.conceal), inv(c.strikethrough))
 
 function Base.print(io::IO, x::Crayon)
-    if anyactive(x) && (Base.have_color || _force_color())
+    io_have_color = get(io, :color, false)
+    if anyactive(x) && ( (Base.have_color && io_have_color) || _force_color())
         print(io, CSI)
         if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT) && _force_256_colors()
             x = _to256(x)
@@ -114,7 +115,8 @@ function Base.print(io::IO, x::Crayon)
 end
 
 function Base.show(io::IO, x::Crayon)
-    if anyactive(x)
+    io_have_color = get(io, :color, false)
+    if anyactive(x) && io_have_color
         print(io, x)
         print(io, ESCAPED_CSI)
         _print(io, x)
