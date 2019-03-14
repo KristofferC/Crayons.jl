@@ -131,10 +131,12 @@ print(GREEN_BG("We ",
 
 **Note:** In order for the color sequences to be printed, the Julia REPL needs to have colors activated,
 either by Julia automatically detecting terminal support or by starting Julia with the `--color=yes` argument.
-Alternatively, if the `ENV` variable `FORCE_COLOR` exist, or `Crayons.force_color(::Bool)` has been enabled,
+Alternatively, if the environment variable `FORCE_COLOR` exist, or `Crayons.force_color(::Bool)` has been enabled,
 color sequences are printed no matter what. Also, since relatively few terminals support full 24-bit colors,
 it is possible to activate 256 color mode which converts the 24-bit crayon to a 256 color crayon when printed.
-This is done by either defining the variable `FORCE_256_COLORS` or by calling `Crayons.force_256_colors(::Bool)`.
+This is done by either defining the variable environment `FORCE_256_COLORS` or by calling `Crayons.force_256_colors(::Bool)`.
+In addition, some systems have problems even with 256 colors, it is possible to convert to one of the 16 system colors
+by defining the variable `FORCE_SYSTEM_COLORS` or by calling `Crayons.force_system_colors(::Bool)`. Note that 16 colors (8 + 8 light versions) is a quite small colorspace so the conversion is unlikely to be very good.
 
 ## Merging `Crayon`s
 

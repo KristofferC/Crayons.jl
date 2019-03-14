@@ -137,4 +137,12 @@ Crayons.test_system_colors(IOBuffer())
 Crayons.test_256_colors(IOBuffer())
 Crayons.test_24bit_colors(IOBuffer())
 
+@test Crayons.to_256_colors(crayon"0000ff") == Crayon(foreground = 21)
+@test Crayons.to_256_colors(crayon"00ff00") == Crayon(foreground = 46)
+@test Crayons.to_256_colors(crayon"ff0000") == Crayon(foreground = 196)
+
+@test Crayons.to_system_colors(crayon"0000ff") == Crayon(foreground = :light_blue)
+@test Crayons.to_system_colors(crayon"00ff00") == Crayon(foreground = :light_green)
+@test Crayons.to_system_colors(crayon"ff0000") == Crayon(foreground = :light_red)
+
 end # withenv
