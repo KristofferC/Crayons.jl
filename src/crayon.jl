@@ -1,11 +1,14 @@
 const FORCE_COLOR = Ref(false)
 const FORCE_256_COLORS = Ref(false)
+const FORCE_SYSTEM_COLORS = Ref(false)
 
-force_color(b::Bool) = FORCE_COLOR[] = b
-force_256_colors(b::Bool) = FORCE_256_COLORS[] = b
+force_color(b::Bool)         = FORCE_COLOR[]         = b
+force_256_colors(b::Bool)    = FORCE_256_COLORS[]    = b
+force_system_colors(b::Bool) = FORCE_SYSTEM_COLORS[] = b
 
-_force_color() = FORCE_COLOR[] || haskey(ENV, "FORCE_COLOR")
-_force_256_colors() = FORCE_256_COLORS[] || haskey(ENV, "FORCE_256_COLORS")
+_force_color()         = FORCE_COLOR[]         || haskey(ENV, "FORCE_COLOR")
+_force_256_colors()    = FORCE_256_COLORS[]    || haskey(ENV, "FORCE_256_COLORS")
+_force_system_colors() = FORCE_SYSTEM_COLORS[] || haskey(ENV, "FORCE_SYSTEM_COLORS")
 
 const CSI = "\e["
 const ESCAPED_CSI = "\\e["
@@ -106,8 +109,12 @@ function Base.print(io::IO, x::Crayon)
     io_has_color = get(io, :color, false)
     if anyactive(x) && (io_has_color || _force_color())
         print(io, CSI)
-        if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT) && _force_256_colors()
-            x = _to256(x)
+        if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT)
+            if _force_256_colors()
+                x = to_256_colors(x)
+            elseif _force_system_colors()
+                x = to_system_colors(x)
+            end
         end
         _print(io, x)
         print(io, END_ANSI)
@@ -272,37 +279,4 @@ function Base.merge(toks::Crayon...)
         tok = merge(tok, toks[i])
     end
     return tok
-end
-
-# 24bit -> 256 colors
-function _to256(crayon::Crayon)
-    fg = crayon.fg
-    bg = crayon.bg
-    crayon.fg.style == COLORS_24BIT && (fg = _to256(crayon.fg))
-    crayon.bg.style == COLORS_24BIT && (bg = _to256(crayon.bg))
-    return Crayon(
-        fg,
-        bg,
-        crayon.reset,
-        crayon.bold,
-        crayon.faint,
-        crayon.italics,
-        crayon.underline,
-        crayon.blink,
-        crayon.negative,
-        crayon.conceal,
-        crayon.strikethrough,
-    )
-end
-
-function _to256(color::ANSIColor)
-    @assert color.style == COLORS_24BIT
-    r, g, b = color.r, color.g, color.b
-    r24, g24, b24 = map(c->round(Int, c * 23 / 256), (r, g, b))
-    if r24 == g24 == b24
-        return ANSIColor(232 + r24, COLORS_256, color.active)
-    else
-        r6, g6, b6 = map(c->round(Int, c * 5  / 256), (r, g, b))
-        return ANSIColor(16 + 36 * r6 + 6 * g6 + b6, COLORS_256, color.active)
-    end
 end
