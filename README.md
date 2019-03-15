@@ -15,7 +15,7 @@ The package is designed to perform well, have no dependencies and load fast (abo
 ## Installation
 
 ```jl
-Pkg.add("Crayons")
+import Pkg; Pkg.add("Crayons")
 ```
 
 ## Usage
