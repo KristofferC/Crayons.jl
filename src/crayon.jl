@@ -105,8 +105,15 @@ Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point takin
                              inv(c.bold), inv(c.faint), inv(c.italics), inv(c.underline),
                              inv(c.blink), inv(c.negative), inv(c.conceal), inv(c.strikethrough))
 
+function _have_color()
+    if isdefined(Base, :get_have_color)
+        return Base.get_have_color()
+    else
+        Base.have_color
+    end
+end
 function Base.print(io::IO, x::Crayon)
-    if anyactive(x) && (Base.have_color || _force_color())
+    if anyactive(x) && (_have_color() || _force_color())
         print(io, CSI)
         if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT)
             if _force_256_colors()
