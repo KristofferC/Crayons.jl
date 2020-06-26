@@ -110,7 +110,6 @@ pop!(cs) # State change: fg = default
 @test string(cs) == string(Crayon(foreground = :default))
 
 # Merge
-@test string(merge()) == ""
 @test string(merge(Crayon(foreground = :blue, background = :red))) == string(Crayon(foreground = :blue, background = :red))
 @test string(merge(Crayon(foreground = :blue), Crayon(background = :red)))  == string(Crayon(foreground = :blue, background = :red))
 @test string(merge(Crayon(foreground = :blue), Crayon(background = :red), Crayon(bold = true)))  == string(Crayon(foreground = :blue, background = :red, bold = true))
