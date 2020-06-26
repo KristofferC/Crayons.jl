@@ -268,13 +268,9 @@ end
 
 Base.:*(a::Crayon, b::Crayon) = merge(a, b)
 
-function Base.merge(toks::Crayon...)
-    if length(toks) == 0
-        return Crayon()
-    end
-    tok = toks[1]
-    for i in 2:length(toks)
-        tok = merge(tok, toks[i])
+function Base.merge(tok::Crayon, toks::Crayon...)
+    for tok2 in toks
+        tok = merge(tok, tok2)
     end
     return tok
 end
