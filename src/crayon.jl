@@ -43,20 +43,14 @@ COLORS_256,
 COLORS_24BIT)
 
 struct ANSIColor
-    r::Int # [0-9, 60-69], for 16 colors, 0-255 for 256 colors and 24 bit
-    g::Int # [0-255] Only used for 24 bit colors
-    b::Int # [0-255] Only used for 24 bit colors
+    r::UInt8 # [0-9, 60-69] for 16 colors, 0-255 for 256 colors
+    g::UInt8
+    b::UInt8
     style::ColorMode
     active::Bool
-    function ANSIColor(r::Int, g::Int = 0, b::Int = 0, style::ColorMode = COLORS_16, active = true)
-        for v in (r, g, b)
-            !(0 <= v <= 255) && throw(ArgumentError("RGB color component has to be between 0 and 255"))
-        end
-        return new(r, g, b, style, active)
-    end
 end
 
-
+ANSIColor(r, g, b) = ANSIColor(r, g, b, COLORS_16, true)
 ANSIColor() = ANSIColor(0, 0, 0, COLORS_16, false)
 ANSIColor(val::Int, style::ColorMode, active::Bool = true) = ANSIColor(val, 0, 0, style, active)
 
