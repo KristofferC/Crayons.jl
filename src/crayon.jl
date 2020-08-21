@@ -52,7 +52,7 @@ end
 
 ANSIColor(r, g, b, style::ColorMode=COLORS_16, active=true) = ANSIColor(UInt8(r), UInt8(g), UInt8(b), style, active)
 ANSIColor() = ANSIColor(0x0, 0x0, 0x0, COLORS_16, false)
-ANSIColor(val::Int, style::ColorMode, active::Bool = true) = ANSIColor(UInt8(val), 0, 0, style, active)
+ANSIColor(val::Integer, style::ColorMode, active::Bool = true) = ANSIColor(UInt8(val), 0, 0, style, active)
 
 red(x::ANSIColor) = x.r
 green(x::ANSIColor) = x.g
