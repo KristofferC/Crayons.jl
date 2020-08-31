@@ -43,22 +43,16 @@ COLORS_256,
 COLORS_24BIT)
 
 struct ANSIColor
-    r::Int # [0-9, 60-69], for 16 colors, 0-255 for 256 colors and 24 bit
-    g::Int # [0-255] Only used for 24 bit colors
-    b::Int # [0-255] Only used for 24 bit colors
+    r::UInt8 # [0-9, 60-69] for 16 colors, 0-255 for 256 colors
+    g::UInt8
+    b::UInt8
     style::ColorMode
     active::Bool
-    function ANSIColor(r::Int, g::Int = 0, b::Int = 0, style::ColorMode = COLORS_16, active = true)
-        for v in (r, g, b)
-            !(0 <= v <= 255) && throw(ArgumentError("RGB color component has to be between 0 and 255"))
-        end
-        return new(r, g, b, style, active)
-    end
 end
 
-
-ANSIColor() = ANSIColor(0, 0, 0, COLORS_16, false)
-ANSIColor(val::Int, style::ColorMode, active::Bool = true) = ANSIColor(val, 0, 0, style, active)
+ANSIColor(r, g, b, style::ColorMode=COLORS_16, active=true) = ANSIColor(UInt8(r), UInt8(g), UInt8(b), style, active)
+ANSIColor() = ANSIColor(0x0, 0x0, 0x0, COLORS_16, false)
+ANSIColor(val::Integer, style::ColorMode, active::Bool = true) = ANSIColor(UInt8(val), 0, 0, style, active)
 
 red(x::ANSIColor) = x.r
 green(x::ANSIColor) = x.g
@@ -67,7 +61,7 @@ val(x::ANSIColor) = x.r
 
 # The inverse sets the color to default.
 # No point making active if color already is default
-Base.inv(x::ANSIColor) = ANSIColor(9, 0, 0, COLORS_16, x.active && !(x.style == COLORS_16 && x.r == 9))
+Base.inv(x::ANSIColor) = ANSIColor(0x9, 0x0, 0x0, COLORS_16, x.active && !(x.style == COLORS_16 && x.r == 9))
 
 struct ANSIStyle
     on::Bool
@@ -137,7 +131,10 @@ function Base.show(io::IO, x::Crayon)
 end
 
 _ishex(c::Char) = isdigit(c) || ('a' <= c <= 'f') || ('A' <= c <= 'F')
-_torgb(hex::UInt32) = Int(hex << 8 >> 24), Int(hex << 16 >> 24), Int(hex << 24 >> 24)
+
+function _torgb(hex::UInt32)::NTuple{3, UInt8}
+    (hex << 8 >> 24, hex << 16 >> 24, hex << 24 >> 24)
+end
 
 function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32})
     ansicol = ANSIColor()

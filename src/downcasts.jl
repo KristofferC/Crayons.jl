@@ -23,10 +23,10 @@ function to_256_colors(color::ANSIColor)
     r, g, b = color.r, color.g, color.b
     r24, g24, b24 = map(c->round(Int, c * 23 / 256), (r, g, b))
     if r24 == g24 == b24
-        return ANSIColor(232 + r24, COLORS_256, color.active)
+        return ANSIColor(UInt8(232 + r24), COLORS_256, color.active)
     else
         r6, g6, b6 = map(c->round(Int, c * 5  / 256), (r, g, b))
-        return ANSIColor(16 + 36 * r6 + 6 * g6 + b6, COLORS_256, color.active)
+        return ANSIColor(UInt8(16 + 36 * r6 + 6 * g6 + b6), COLORS_256, color.active)
     end
 end
 
@@ -91,5 +91,5 @@ function to_system_colors(color::ANSIColor)
               round(Int, r / 255))
         value == 2 && (ansi += 60)
     end
-    return ANSIColor(ansi, COLORS_16, color.active)
+    return ANSIColor(UInt8(ansi), COLORS_16, color.active)
 end
