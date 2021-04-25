@@ -77,7 +77,7 @@ Calling `using` on the `Crayons.Box` module will bring all these into global sco
 #### String macros
 
 `Crayon`s can also be created in a terser way using the [string macro](https://docs.julialang.org/en/stable/manual/metaprogramming/#Non-Standard-String-Literals-1) `crayon`.
-These are written using `crayon"[[fg:]<col>] [bg:<col>] ([[!]<style>] ...")` where:
+These are written using `crayon"[[fg:]<col>] [bg:<col>] ([[!]<style>] ...)"` where:
 * text inside a square bracket is optional
 * `<col>` is a color given as a hexadecimal number, `(r,g,b)` tuple (no spaces), a number 0-255, or one of the 16 named colors.
 * `<style>` is one of the styles.
@@ -113,7 +113,7 @@ print(BOLD, GREEN_FG, BLUE_BG, "Bold green on blue")
 
 It is also possible to use *call overloading* on created `Crayon`s.
 The `Crayon` can be called with strings and other `Crayon`s and the colors and styles will correctly nest.
-Correct end sequences will als be printed so the colors and styles are disabled outside the call scope.
+Correct end sequences will also be printed so the colors and styles are disabled outside the call scope.
 This functionality is perhaps more clearly shown with some examples:
 
 
@@ -168,7 +168,7 @@ As an example, `inv(Crayon(bold = true))` returns a `Crayon` that disables bold.
 
 ## Advanced nesting of colors and styles
 
-If you want to nest colors and styles through function calls there is the `ColorStack` type.
+If you want to nest colors and styles through function calls there is the `CrayonStack` type.
 Simply `push!` `Crayon`s onto the stack, print text to the stack, and then `pop!` the `Crayons` off.
 The stack will keep track of what `Crayon` is currently active.
 It is used just like a `Crayon`:
