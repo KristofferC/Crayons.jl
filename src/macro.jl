@@ -41,7 +41,7 @@ macro crayon_str(str::String)
             end
             @goto doparse
             @label parse_err
-            return :(throw(ArgumentError("should have the format [fg/bg]:color")))
+            throw(ArgumentError("should have the format [fg/bg]:color"))
         end
 
         @label doparse
@@ -106,7 +106,9 @@ function _parse_color_string(token::AbstractString)
     reg = r"\(([0-9]*),([0-9]*),([0-9]*)\)"
     m = match(reg, token)
     if m !== nothing
-        r, g, b = m.captures
+        r = m.captures[1]::SubString{String}
+        g = m.captures[2]::SubString{String}
+        b = m.captures[3]::SubString{String}
         return _parse_color(parse.(Int, (r, g, b)))
     end
 

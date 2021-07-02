@@ -97,3 +97,4 @@ function Base.pop!(cs::CrayonStack)
     # Return the currently active crayon so we can use print(pop!(crayonstack), "bla")
     return cs
 end
+
