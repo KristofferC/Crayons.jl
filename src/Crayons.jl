@@ -10,6 +10,7 @@ include("test_prints.jl")
 include("logo.jl")
 include("consts.jl")
 include("macro.jl")
+include("precompile.jl")
 
 end # module
 
