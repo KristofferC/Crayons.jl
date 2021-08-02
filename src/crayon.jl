@@ -136,9 +136,9 @@ function _torgb(hex::UInt32)::NTuple{3, UInt8}
     (hex << 8 >> 24, hex << 16 >> 24, hex << 24 >> 24)
 end
 
-function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32})
+function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32,Nothing})
     ansicol = ANSIColor()
-    if c != :nothing
+    if c !== nothing
         if isa(c, Symbol)
             ansicol = ANSIColor(COLORS[c], COLORS_16)
         elseif isa(c, UInt32)
@@ -155,17 +155,17 @@ function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32})
     return ansicol
 end
 
-function Crayon(;foreground::Union{Int,Symbol,NTuple{3,Integer},UInt32} = :nothing,
-                 background::Union{Int,Symbol,NTuple{3,Integer},UInt32} = :nothing,
-                 reset = :nothing,
-                 bold = :nothing,
-                 faint = :nothing,
-                 italics = :nothing,
-                 underline = :nothing,
-                 blink = :nothing,
-                 negative = :nothing,
-                 conceal = :nothing,
-                 strikethrough = :nothing)
+function Crayon(;foreground::Union{Int,Symbol,NTuple{3,Integer},UInt32,Nothing} = nothing,
+                 background::Union{Int,Symbol,NTuple{3,Integer},UInt32,Nothing} = nothing,
+                 reset::Union{Bool,Nothing} = nothing,
+                 bold::Union{Bool,Nothing} = nothing,
+                 faint::Union{Bool,Nothing} = nothing,
+                 italics::Union{Bool,Nothing} = nothing,
+                 underline::Union{Bool,Nothing} = nothing,
+                 blink::Union{Bool,Nothing} = nothing,
+                 negative::Union{Bool,Nothing} = nothing,
+                 conceal::Union{Bool,Nothing} = nothing,
+                 strikethrough::Union{Bool,Nothing} = nothing)
 
     fgcol = _parse_color(foreground)
     bgcol = _parse_color(background)
@@ -180,15 +180,15 @@ function Crayon(;foreground::Union{Int,Symbol,NTuple{3,Integer},UInt32} = :nothi
     _conceal       = ANSIStyle()
     _strikethrough = ANSIStyle()
 
-    reset         != :nothing && (_reset         = ANSIStyle(reset))
-    bold          != :nothing && (_bold          = ANSIStyle(bold))
-    faint         != :nothing && (_faint         = ANSIStyle(faint))
-    italics       != :nothing && (_italics       = ANSIStyle(italics))
-    underline     != :nothing && (_underline     = ANSIStyle(underline))
-    blink         != :nothing && (_blink         = ANSIStyle(blink))
-    negative      != :nothing && (_negative      = ANSIStyle(negative))
-    conceal       != :nothing && (_conceal       = ANSIStyle(conceal))
-    strikethrough != :nothing && (_strikethrough = ANSIStyle(strikethrough))
+    reset         !== nothing && (_reset         = ANSIStyle(reset))
+    bold          !== nothing && (_bold          = ANSIStyle(bold))
+    faint         !== nothing && (_faint         = ANSIStyle(faint))
+    italics       !== nothing && (_italics       = ANSIStyle(italics))
+    underline     !== nothing && (_underline     = ANSIStyle(underline))
+    blink         !== nothing && (_blink         = ANSIStyle(blink))
+    negative      !== nothing && (_negative      = ANSIStyle(negative))
+    conceal       !== nothing && (_conceal       = ANSIStyle(conceal))
+    strikethrough !== nothing && (_strikethrough = ANSIStyle(strikethrough))
 
     return Crayon(fgcol,
                   bgcol,
