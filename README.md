@@ -5,7 +5,7 @@
 
 > Colored and styled strings for terminals.
 
-[![Build Status](https://travis-ci.org/KristofferC/Crayons.jl.svg?branch=master)](https://travis-ci.org/KristofferC/Crayons.jl) [![codecov](https://codecov.io/gh/KristofferC/Crayons.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/KristofferC/Crayons.jl)
+[![Build Status](https://github.com/KristofferC/Crayons.jl/workflows/CI/badge.svg)](https://github.com/KristofferC/Crayons.jl/actions?query=workflows/CI) [![codecov](https://codecov.io/gh/KristofferC/Crayons.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/KristofferC/Crayons.jl)
 
 *Crayons* is a package that makes it simple to write strings in different colors and styles to terminals.
 It supports the 16 system colors, both the 256 color and 24 bit true color extensions, and the different text styles available to terminals.
