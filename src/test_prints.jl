@@ -20,7 +20,7 @@ function test_system_colors(io::IO = stdout)
     end
 end
 
-test_256_colors(codes::Bool = true) = test_256_colors(stdout, codes)
+test_256_colors(; codes::Bool = true) = test_256_colors(stdout, codes)
 test_256_colors(io::IO) = test_256_colors(io, true)
 function test_256_colors(io::IO, codes::Bool)
     println(io, "System colors (0..15):")
@@ -48,7 +48,7 @@ function test_256_colors(io::IO, codes::Bool)
     end
 end
 
-test_24bit_colors(codes::Bool = true) = test_24bit_colors(stdout, codes)
+test_24bit_colors(; codes::Bool = true) = test_24bit_colors(stdout, codes)
 test_24bit_colors(io::IO) = test_24bit_colors(io, true)
 function test_24bit_colors(io::IO, codes::Bool)
     steps = 0:30:255
