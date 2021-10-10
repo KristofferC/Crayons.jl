@@ -107,6 +107,7 @@ function _have_color()
     end
 end
 function Base.print(io::IO, x::Crayon)
+    get(io, :color, true) || return
     if anyactive(x) && (_have_color() || _force_color())
         print(io, CSI)
         if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT)
@@ -122,6 +123,7 @@ function Base.print(io::IO, x::Crayon)
 end
 
 function Base.show(io::IO, x::Crayon)
+    get(io, :color, true) || return
     if anyactive(x)
         print(io, x)
         print(io, ESCAPED_CSI)
