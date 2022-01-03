@@ -46,10 +46,10 @@ The `foreground` and `background` argument can be of three types:
   These colors are supported by almost all terminals.
 * An `Integer` between 0 and 255.
   This will use the 256 color ANSI escape codes.
-  To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors(shownumbers::Bool=true)`.
+  To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors(codes=true)`.
 * A `Tuple` of three `Integer`s, all between 0 and 255.
   This will be interpreted as a `(r, g, b)` 24 bit color.
-  To test your terminals support for 24 bit colors, use `Crayons.test_24bit_colors(shownumbers::Bool=false)`.
+  To test your terminals support for 24 bit colors, use `Crayons.test_24bit_colors(codes=false)`.
   The support for this is currently quite limited but is being improved in terminals continuously, see [here](https://gist.github.com/XVilka/8346728).
 * A `UInt32` representing a color given in hexadecimal format.
   Will be converted to the corresponding RGB format.
