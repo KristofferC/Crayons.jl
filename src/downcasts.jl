@@ -18,16 +18,12 @@ function to_256_colors(crayon::Crayon)
     )
 end
 
+const _cube_levels = UInt8[0, 95, 135, 175, 215, 255]
+
 function to_256_colors(color::ANSIColor)
     @assert color.style == COLORS_24BIT
-    r, g, b = color.r, color.g, color.b
-    r24, g24, b24 = map(c->round(Int, c * 23 / 256), (r, g, b))
-    if r24 == g24 == b24
-        return ANSIColor(UInt8(232 + r24), COLORS_256, color.active)
-    else
-        r6, g6, b6 = map(c->round(Int, c * 5  / 256), (r, g, b))
-        return ANSIColor(UInt8(16 + 36 * r6 + 6 * g6 + b6), COLORS_256, color.active)
-    end
+    r6, g6, b6 = map(c->argmin(abs.(c .- _cube_levels)) - 1, (color.r, color.g, color.b))
+    return ANSIColor(UInt8(16 + 36r6 + 6g6 + b6), COLORS_256, color.active)
 end
 
 # 24bit -> 16 system colors

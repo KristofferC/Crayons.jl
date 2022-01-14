@@ -136,9 +136,19 @@ Crayons.test_system_colors(IOBuffer())
 Crayons.test_256_colors(IOBuffer())
 Crayons.test_24bit_colors(IOBuffer())
 
-@test Crayons.to_256_colors(crayon"0000ff") == Crayon(foreground = 21)
-@test Crayons.to_256_colors(crayon"00ff00") == Crayon(foreground = 46)
-@test Crayons.to_256_colors(crayon"ff0000") == Crayon(foreground = 196)
+makeCrayon(fgcol, bgcol = Crayons.ANSIColor()) = begin
+    s = Crayons.ANSIStyle()
+    Crayon(fgcol, bgcol, (s for _ in 1:9)...)
+end
+UInt8tohex(s) = string(s, base=16, pad=2)
+
+levels = Crayons._cube_levels
+for (k, lk) in enumerate(levels), (j, lj) in enumerate(levels), (i, li) in enumerate(levels)
+    @test (
+        UInt8tohex(lk) * UInt8tohex(lj) * UInt8tohex(li) |> Crayons._parse_color_string |> makeCrayon |> Crayons.to_256_colors ==
+        Crayon(foreground = 16 + (k - 1) * length(levels)^2 + (j - 1) * length(levels) + (i - 1))
+    )
+end
 
 @test Crayons.to_system_colors(crayon"0000ff") == Crayon(foreground = :light_blue)
 @test Crayons.to_system_colors(crayon"00ff00") == Crayon(foreground = :light_green)
