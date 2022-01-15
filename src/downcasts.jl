@@ -22,8 +22,16 @@ const _cube_levels = UInt8[0, 95, 135, 175, 215, 255]
 
 function to_256_colors(color::ANSIColor)
     @assert color.style == COLORS_24BIT
-    r6, g6, b6 = map(c->argmin(abs.(c .- _cube_levels)) - 1, (color.r, color.g, color.b))
-    return ANSIColor(UInt8(16 + 36r6 + 6g6 + b6), COLORS_256, color.active)
+    r, g, b = color.r, color.g, color.b
+    if r == g == b && r % 10 == 8  # gray levels
+        ansi = 232 + (r - 8) ÷ 10
+    elseif (r & 0x1) == 0 && (g & 0x1) == 0 && (b & 0x1) == 0  # primary colors
+        ansi = (r >> 7) + 2(g >> 7) + 4(b >> 7)
+    else  # cube 6x6x6
+        r6, g6, b6 = map(c->argmin(abs.(c .- _cube_levels)) - 1, (r, g, b))
+        ansi = 16 + 36r6 + 6g6 + b6
+    end
+    return ANSIColor(UInt8(ansi), COLORS_256, color.active)
 end
 
 # 24bit -> 16 system colors
@@ -50,7 +58,7 @@ end
 function compute_value(r, g, b)
     r′, g′, b′ = (r, g, b) ./ 255
     Cmax = max(r′, g′, b′)
-    return Cmax * 100
+    return 100Cmax
     #=
     # This is not needed
     Cmin = min(r′, g′, b′)
@@ -81,10 +89,11 @@ function to_system_colors(color::ANSIColor)
     if (value == 0)
         ansi = 0
     else
-        ansi = 
-            ((round(Int, b / 255) << 2) |
-             (round(Int, g / 255) << 1) |
-              round(Int, r / 255))
+        ansi = (
+            (round(Int, b / 255) << 2) |
+            (round(Int, g / 255) << 1) |
+             round(Int, r / 255)
+        )
         value == 2 && (ansi += 60)
     end
     return ANSIColor(UInt8(ansi), COLORS_16, color.active)
