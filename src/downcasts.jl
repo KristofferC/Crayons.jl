@@ -19,17 +19,35 @@ function to_256_colors(crayon::Crayon)
 end
 
 const _cube_levels = UInt8[0, 95, 135, 175, 215, 255]
+const _cube_memoize = Dict{NTuple{3,UInt8},UInt8}()
+
+function rgb2cube(r::UInt8, g::UInt8, b::UInt8)
+  min_dist::Int16 = typemax(Int16)
+  min_n::UInt8 = typemax(UInt8)
+  @inbounds for n ∈ UnitRange{UInt8}(0:215)
+    𝓇::Int16 = _cube_levels[n÷UInt8(36)+UInt8(1)]
+    ℊ::Int16 = _cube_levels[(n%UInt8(36))÷UInt8(6)+UInt8(1)]
+    𝒷::Int16 = _cube_levels[n%UInt8(6)+UInt8(1)]
+    if (dist = abs(𝓇 - r) + abs(ℊ - g) + abs(𝒷 - b)) <= min_dist
+      min_dist, min_n = dist, n
+    end
+  end
+  return UInt8(16) + min_n
+end
+
+@inline primary(c::UInt8) = (c & 0x1) == 0 && (c > 0 ? c == 128 || c == 192 : true)
 
 function to_256_colors(color::ANSIColor)
     @assert color.style == COLORS_24BIT
     r, g, b = color.r, color.g, color.b
     if r == g == b && r % 10 == 8  # gray levels
-        ansi = 232 + (r - 8) ÷ 10
-    elseif (r & 0x1) == 0 && (g & 0x1) == 0 && (b & 0x1) == 0  # primary colors
+        ansi = 232 + min((r - 8) ÷ 10, 23)
+    elseif primary(r) && primary(g) && primary(b)  # primary colors
         ansi = (r >> 7) + 2(g >> 7) + 4(b >> 7)
     else  # cube 6x6x6
-        r6, g6, b6 = map(c->argmin(abs.(c .- _cube_levels)) - 1, (r, g, b))
-        ansi = 16 + 36r6 + 6g6 + b6
+        ansi = get!(_cube_memoize, (r, g, b)) do
+            rgb2cube(r, g, b)
+        end
     end
     return ANSIColor(UInt8(ansi), COLORS_256, color.active)
 end
