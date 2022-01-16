@@ -148,9 +148,9 @@ end
 end
 
 @testset "8bit - 256 colors" begin
-    # see https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
+    # en.wikipedia.org/wiki/ANSI_escape_code#8-bit
 
-    # primary colors: 0 - 15
+    # Standard colors (primary colors): 0 - 15
     @test crayon"000000" |> Crayons.to_256_colors == crayon"0"
     @test crayon"800000" |> Crayons.to_256_colors == crayon"1"
     @test crayon"008000" |> Crayons.to_256_colors == crayon"2"
@@ -173,7 +173,7 @@ end
     foregroundCrayon(fgcol) = Crayon(fgcol, Crayons.ANSIColor(), (Crayons.ANSIStyle() for _ in 1:9)...)
     UInt8tohex(s) = string(s, base=16, pad=2)
 
-    levels = Crayons._cube_levels
+    levels = [0, 95, 135, 175, 215, 255]
     for (k, lk) in enumerate(levels), (j, lj) in enumerate(levels), (i, li) in enumerate(levels)
         i == 1 && j == 1 && k == 1 && continue  # ansi 16 is a duplicate of ansi 0 (tested in primary colors)
         @test (
@@ -211,7 +211,7 @@ end
 end
 
 @testset "8bit ansi approximation" begin
-    # https://codegolf.stackexchange.com/q/156918
+    # codegolf.stackexchange.com/q/156918
     @test Crayons.to_256_colors(crayon"(95,135,0)") == crayon"64"
     @test Crayons.to_256_colors(crayon"(255,255,255)") == crayon"231"
     @test Crayons.to_256_colors(crayon"(238,238,238)") == crayon"255"
@@ -234,7 +234,7 @@ end
 end
 
 @testset "named HTML to 8bit" begin
-    # https://www.w3schools.com/colors/colors_hex.asp
+    # www.w3schools.com/colors/colors_hex.asp
     @test crayon"000000" |> Crayons.to_256_colors == crayon"0"
     @test crayon"000080" |> Crayons.to_256_colors == crayon"4"
     @test crayon"00008b" |> Crayons.to_256_colors == crayon"18"
