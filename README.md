@@ -68,7 +68,7 @@ The other keyword arguments are all of `Bool` type and determine whether the cor
 
 To see text with the different styles active, use `Crayons.test_styles()`
 
-By using the symbol `:nothing` for any of the keyword arguments, that color or style is inactive and is thus neither actively enable or disabled.
+By using `nothing` for any of the keyword arguments, that color or style is inactive and is thus neither actively enable or disabled.
 
 For convenience, `Crayon`s for the foreground / background version of the 16 system colors as well as the different styles are pre-made and can be found in the `Crayons.Box` module.
 They have the name `<COLOR_NAME>_<BG/FG>` for the foreground/background colors and `<STYLE>` for the different styles (note the uppercase).
