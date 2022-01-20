@@ -20,14 +20,16 @@ end
 
 function to_256_colors(color::ANSIColor)
     @assert color.style == COLORS_24BIT
-    r, g, b = color.r, color.g, color.b
-    r24, g24, b24 = map(c->round(Int, c * 23 / 256), (r, g, b))
-    if r24 == g24 == b24
-        return ANSIColor(UInt8(232 + r24), COLORS_256, color.active)
+    r, g, b = rgb = color.r, color.g, color.b
+    ansi = if r == g == b && r % 10 == 8
+        232 + min((r - 8) ÷ 10, 23)  # gray level
+    elseif all(map(c -> (c & 0x1) == 0 && (c > 0 ? c == 128 || c == 192 : true), rgb))
+        (r >> 7) + 2(g >> 7) + 4(b >> 7)  # primary color
     else
-        r6, g6, b6 = map(c->round(Int, c * 5  / 256), (r, g, b))
-        return ANSIColor(UInt8(16 + 36 * r6 + 6 * g6 + b6), COLORS_256, color.active)
+        r6, g6, b6 = map(c -> c < 48 ? 0 : (c < 114 ? 1 : trunc(Int, (c - 35) / 40)), rgb)
+        16 + 36r6 + 6g6 + b6  # cube 6x6x6
     end
+    return ANSIColor(UInt8(ansi), COLORS_256, color.active)
 end
 
 # 24bit -> 16 system colors
@@ -54,7 +56,7 @@ end
 function compute_value(r, g, b)
     r′, g′, b′ = (r, g, b) ./ 255
     Cmax = max(r′, g′, b′)
-    return Cmax * 100
+    return 100Cmax
     #=
     # This is not needed
     Cmin = min(r′, g′, b′)
@@ -85,10 +87,11 @@ function to_system_colors(color::ANSIColor)
     if (value == 0)
         ansi = 0
     else
-        ansi = 
-            ((round(Int, b / 255) << 2) |
-             (round(Int, g / 255) << 1) |
-              round(Int, r / 255))
+        ansi = (
+            (round(Int, b / 255) << 2) |
+            (round(Int, g / 255) << 1) |
+             round(Int, r / 255)
+        )
         value == 2 && (ansi += 60)
     end
     return ANSIColor(UInt8(ansi), COLORS_16, color.active)
