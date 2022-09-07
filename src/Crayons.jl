@@ -12,5 +12,9 @@ include("consts.jl")
 include("macro.jl")
 include("precompile.jl")
 
+function new_method()
+    print("Hello, thanks for Revising me")
+end
+
 end # module
 
