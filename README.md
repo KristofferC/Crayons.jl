@@ -197,7 +197,7 @@ stack = CrayonStack(incremental = true)
 print(io, push!(stack, Crayon(foreground = :red)))
 print(io, push!(stack, Crayon(foreground = :red)))
 print(io, stack, "This will be red")
-print(takebuf_string(io))
+print(String(take!(io)))
 
 # Does not work
 io = IOBuffer()
@@ -205,7 +205,7 @@ stack = CrayonStack(incremental = true)
 push!(stack, Crayon(foreground = :red)) # <- not printing the stack even though we modify it!
 print(io, push!(stack, Crayon(foreground = :red)))
 print(io, stack, "This will not be red")
-print(takebuf_string(io))
+print(String(take!(io)))
 ```
 
 The reason why the last example did not work is because the stack notices that there is no change of text state on the second call to `push!`, since the foreground was just kept red.
