@@ -121,7 +121,7 @@ function Base.print(io::IO, x::Crayon)
     end
 end
 
-function Base.show(io::IO, x::Crayon)
+function Base.show(io::IO, ::MIME"text/plain", x::Crayon)
     if anyactive(x)
         print(io, x)
         print(io, ESCAPED_CSI)

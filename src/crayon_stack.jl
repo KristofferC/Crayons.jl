@@ -5,6 +5,7 @@ struct CrayonStack
 end
 
 Base.print(io::IO, cs::CrayonStack) = print(io, cs.crayons[end])
+Base.show(io::IO, ::MIME"text/plain", cs::CrayonStack) = show(io, MIME("text/plain"), cs.crayons[end])
 
 function CrayonStack(; incremental::Bool = false)
     CrayonStack(incremental, [Crayon(ANSIColor(0x9, COLORS_16, !incremental),
