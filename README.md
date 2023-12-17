@@ -3,7 +3,7 @@
     <br>
 </h1>
 
-> Colored and styled strings for terminals.
+> Colored and styled strings for terminals !
 
 [![Build Status](https://github.com/KristofferC/Crayons.jl/workflows/CI/badge.svg)](https://github.com/KristofferC/Crayons.jl/actions?query=workflows/CI) [![codecov](https://codecov.io/gh/KristofferC/Crayons.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/KristofferC/Crayons.jl)
 
