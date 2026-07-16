@@ -147,7 +147,7 @@ function Base.print(io::IO, x::Crayon)
     return nothing
 end
 
-function Base.show(io::IO, x::Crayon)
+function Base.show(io::IO, ::MIME"text/plain", x::Crayon)
     if anyactive(x)
         color = _use_color(io)
         color && print(io, x)
