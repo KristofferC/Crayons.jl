@@ -6,18 +6,14 @@ end
 
 Base.print(io::IO, cs::CrayonStack) = print(io, cs.crayons[end])
 
+function _default_crayon(active::Bool)
+    Crayon(ANSIColor(0x9, COLORS_16, active),
+           ANSIColor(0x9, COLORS_16, active),
+           (ANSIStyle(false, active) for _ in 1:9)...)
+end
+
 function CrayonStack(; incremental::Bool = false)
-    CrayonStack(incremental, [Crayon(ANSIColor(0x9, COLORS_16, !incremental),
-                                     ANSIColor(0x9, COLORS_16, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental),
-                                     ANSIStyle(false, !incremental))])
+    CrayonStack(incremental, [_default_crayon(!incremental)])
 end
 
 # Checks if equal disregarding active or not
@@ -49,6 +45,7 @@ _incremental_sub(a::ANSIStyle, b::ANSIStyle, incremental::Bool) = ANSIStyle(b.on
 
 function Base.push!(cs::CrayonStack, c::Crayon)
     pc = cs.crayons[end]
+    c.reset.active && c.reset.on && (pc = _default_crayon(false))
     push!(cs.crayons, Crayon(
         _incremental_add(pc.fg           , c.fg           , cs.incremental),
         _incremental_add(pc.bg           , c.bg           , cs.incremental),
@@ -70,17 +67,7 @@ function Base.pop!(cs::CrayonStack)
     c = pop!(cs.crayons)
     pc = cs.crayons[end]
     if length(cs.crayons) == 1
-        pc = Crayon(ANSIColor(0x9, COLORS_16, true),
-                    ANSIColor(0x9, COLORS_16, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true),
-                    ANSIStyle(false, true))
+        pc = _default_crayon(true)
     end
     cs.crayons[end] = Crayon(
         _incremental_sub(c.fg           , pc.fg           , cs.incremental),
@@ -97,4 +84,3 @@ function Base.pop!(cs::CrayonStack)
     # Return the currently active crayon so we can use print(pop!(crayonstack), "bla")
     return cs
 end
-

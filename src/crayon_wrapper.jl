@@ -4,10 +4,12 @@ struct CrayonWrapper
 end
 
 function (c::Crayon)(args::Union{CrayonWrapper,AbstractString}...)
-    typefix(cw::CrayonWrapper) = cw
-    typefix(str) = String(str)
-
-    CrayonWrapper(c, typefix.(collect(args)))
+    values = Vector{Union{CrayonWrapper,String}}(undef, length(args))
+    for i in eachindex(args)
+        arg = args[i]
+        values[i] = arg isa CrayonWrapper ? arg : String(arg)
+    end
+    CrayonWrapper(c, values)
 end
 
 Base.show(io::IO, cw::CrayonWrapper) = _show(io, cw, CrayonStack(incremental = true))
@@ -25,3 +27,9 @@ end
 
 Base.:*(c::Crayon, cw::CrayonWrapper) = CrayonWrapper(c * cw.c, cw.v)
 Base.:*(cw::CrayonWrapper, c::Crayon) = CrayonWrapper(cw.c * c, cw.v)
+
+# Concatenation; the crayon applies to the string it is multiplied with
+Base.:*(c::Crayon, s::AbstractString) = c(s)
+Base.:*(s::AbstractString, cw::CrayonWrapper) = CrayonWrapper(Crayon(), Union{CrayonWrapper,String}[String(s), cw])
+Base.:*(cw::CrayonWrapper, s::AbstractString) = CrayonWrapper(Crayon(), Union{CrayonWrapper,String}[cw, String(s)])
+Base.:*(a::CrayonWrapper, b::CrayonWrapper) = CrayonWrapper(Crayon(), Union{CrayonWrapper,String}[a, b])

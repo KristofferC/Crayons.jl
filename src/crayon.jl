@@ -2,17 +2,30 @@ const FORCE_COLOR = Ref(false)
 const FORCE_256_COLORS = Ref(false)
 const FORCE_SYSTEM_COLORS = Ref(false)
 
+# The environment is read once at load time; use the force_* functions to
+# change the behavior at runtime.
+function __init__()
+    FORCE_COLOR[]         = haskey(ENV, "FORCE_COLOR")
+    FORCE_256_COLORS[]    = haskey(ENV, "FORCE_256_COLORS")
+    FORCE_SYSTEM_COLORS[] = haskey(ENV, "FORCE_SYSTEM_COLORS")
+end
+
 force_color(b::Bool)         = FORCE_COLOR[]         = b
 force_256_colors(b::Bool)    = FORCE_256_COLORS[]    = b
 force_system_colors(b::Bool) = FORCE_SYSTEM_COLORS[] = b
 
-_force_color()         = FORCE_COLOR[]         || haskey(ENV, "FORCE_COLOR")
-_force_256_colors()    = FORCE_256_COLORS[]    || haskey(ENV, "FORCE_256_COLORS")
-_force_system_colors() = FORCE_SYSTEM_COLORS[] || haskey(ENV, "FORCE_SYSTEM_COLORS")
+_force_color()         = FORCE_COLOR[]
+_force_256_colors()    = FORCE_256_COLORS[]
+_force_system_colors() = FORCE_SYSTEM_COLORS[]
 
 const CSI = "\e["
 const ESCAPED_CSI = "\\e["
 const END_ANSI = "m"
+
+# Every number in an escape sequence is in 0:255, so print them via a lookup
+# table instead of allocating a string per integer.
+const DEC_STRINGS = [string(i) for i in 0:255]
+_dec(x::Integer) = DEC_STRINGS[Int(x) + 1]
 
 # Add 30 to get fg ANSI
 # Add 40 to get bg ANSI
@@ -99,54 +112,71 @@ Base.inv(c::Crayon) = Crayon(inv(c.fg), inv(c.bg), ANSIStyle(), # no point takin
                              inv(c.bold), inv(c.faint), inv(c.italics), inv(c.underline),
                              inv(c.blink), inv(c.negative), inv(c.conceal), inv(c.strikethrough))
 
-function _have_color()
-    if isdefined(Base, :get_have_color)
-        return Base.get_have_color()
-    else
-        Base.have_color
-    end
-end
-function Base.print(io::IO, x::Crayon)
-    if anyactive(x) && (_have_color() || _force_color())
-        print(io, CSI)
-        if (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT)
-            if _force_256_colors()
-                x = to_256_colors(x)
-            elseif _force_system_colors()
-                x = to_system_colors(x)
-            end
+_have_color() = Base.get_have_color()
+_have_color(io::IO) = get(io, :color, _have_color())
+_use_color(io::IO) = _have_color(io) || _force_color()
+
+function _downcast(x::Crayon)
+    if x.fg.style != COLORS_16 || x.bg.style != COLORS_16
+        if _force_system_colors()
+            return to_system_colors(x)
+        elseif _force_256_colors() && (x.fg.style == COLORS_24BIT || x.bg.style == COLORS_24BIT)
+            return to_256_colors(x)
         end
-        _print(io, x)
-        print(io, END_ANSI)
     end
+    return x
+end
+
+function Base.print(io::IO, x::Crayon)
+    if anyactive(x) && _use_color(io)
+        x = _downcast(x)
+        if io isa Base.GenericIOBuffer
+            print(io, CSI)
+            _print(io, x)
+            print(io, END_ANSI)
+        else
+            # Assemble the escape sequence and emit it as a single write so it
+            # cannot be torn by concurrent writers to the same stream.
+            buf = IOBuffer(sizehint = 64)
+            print(buf, CSI)
+            _print(buf, x)
+            print(buf, END_ANSI)
+            write(io, take!(buf))
+        end
+    end
+    return nothing
 end
 
 function Base.show(io::IO, x::Crayon)
     if anyactive(x)
-        print(io, x)
+        color = _use_color(io)
+        color && print(io, x)
         print(io, ESCAPED_CSI)
         _print(io, x)
-        print(io, END_ANSI, CSI, "0", END_ANSI)
+        print(io, END_ANSI)
+        color && print(io, CSI, "0", END_ANSI)
     end
 end
 
-_ishex(c::Char) = isdigit(c) || ('a' <= c <= 'f') || ('A' <= c <= 'F')
-
 function _torgb(hex::UInt32)::NTuple{3, UInt8}
+    hex <= 0x00ffffff || throw(ArgumentError("RGB color must be between 0x000000 and 0xffffff"))
     (hex << 8 >> 24, hex << 16 >> 24, hex << 24 >> 24)
 end
 
 function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32,Nothing})
     ansicol = ANSIColor()
     if c !== nothing
-        if isa(c, Symbol)
+        if c isa Symbol
+            haskey(COLORS, c) || throw(ArgumentError("unknown color: $c"))
             ansicol = ANSIColor(COLORS[c], COLORS_16)
-        elseif isa(c, UInt32)
+        elseif c isa UInt32
             r, g, b = _torgb(c)
             ansicol = ANSIColor(r, g, b, COLORS_24BIT)
-        elseif isa(c, Integer)
+        elseif c isa Integer
+            0 <= c <= 255 || throw(ArgumentError("256-color index must be between 0 and 255"))
             ansicol = ANSIColor(c, COLORS_256)
-        elseif isa(c, NTuple{3,Integer})
+        elseif c isa NTuple{3,Integer}
+            all(x -> 0 <= x <= 255, c) || throw(ArgumentError("RGB channels must be between 0 and 255"))
             ansicol = ANSIColor(c[1], c[2], c[3], COLORS_24BIT)
         else
             error("should not happen")
@@ -155,8 +185,8 @@ function _parse_color(c::Union{Integer,Symbol,NTuple{3,Integer},UInt32,Nothing})
     return ansicol
 end
 
-function Crayon(;foreground::Union{Int,Symbol,NTuple{3,Integer},UInt32,Nothing} = nothing,
-                 background::Union{Int,Symbol,NTuple{3,Integer},UInt32,Nothing} = nothing,
+function Crayon(;foreground::Union{Integer,Symbol,NTuple{3,Integer},Nothing} = nothing,
+                 background::Union{Integer,Symbol,NTuple{3,Integer},Nothing} = nothing,
                  reset::Union{Bool,Nothing} = nothing,
                  bold::Union{Bool,Nothing} = nothing,
                  faint::Union{Bool,Nothing} = nothing,
@@ -217,45 +247,49 @@ function _print(io::IO, c::Crayon)
             !first_active && print(io, ";")
             first_active = false
 
-            col.style == COLORS_16    && print(io, val(col) + num)
-            col.style == COLORS_256   && print(io, num + 8, ";5;", val(col))
-            col.style == COLORS_24BIT && print(io, num + 8, ";2;", red(col), ";", green(col), ";", blue(col))
+            if col.style == COLORS_16
+                print(io, _dec(val(col) + num))
+            elseif col.style == COLORS_256
+                print(io, num == 30 ? "38;5;" : "48;5;", _dec(val(col)))
+            elseif col.style == COLORS_24BIT
+                print(io, num == 30 ? "38;2;" : "48;2;", _dec(red(col)), ";", _dec(green(col)), ";", _dec(blue(col)))
+            end
         end
     end
 
-    for (style, val) in ((c.bold, 1),
-                         (c.faint, 2),
-                         (c.italics, 3),
-                         (c.underline, 4),
-                         (c.blink, 5),
-                         (c.negative, 7),
-                         (c.conceal, 8),
-                         (c.strikethrough, 9))
+    for (style, code) in ((c.bold, 1),
+                          (c.faint, 2),
+                          (c.italics, 3),
+                          (c.underline, 4),
+                          (c.blink, 5),
+                          (c.negative, 7),
+                          (c.conceal, 8),
+                          (c.strikethrough, 9))
 
         if style.active
             !first_active && print(io, ";")
             first_active = false
 
-            style.on && print(io, val)
-            # Bold off is actually 22 so special case for val == 1
-            !style.on && print(io, val == 1 ? val + 21 : val + 20)
+            # Bold off is actually 22 so special case for code == 1
+            print(io, style.on ? _dec(code) : _dec(code == 1 ? 22 : code + 20))
         end
     end
     return nothing
 end
 
 function Base.merge(a::Crayon, b::Crayon)
-    fg            = b.fg.active            ? b.fg            : a.fg
-    bg            = b.bg.active            ? b.bg            : a.bg
-    reset         = b.reset.active         ? b.reset         : a.reset
-    bold          = b.bold.active          ? b.bold          : a.bold
-    faint         = b.faint.active         ? b.faint         : a.faint
-    italics       = b.italics.active       ? b.italics       : a.italics
-    underline     = b.underline.active     ? b.underline     : a.underline
-    blink         = b.blink.active         ? b.blink         : a.blink
-    negative      = b.negative.active      ? b.negative      : a.negative
-    conceal       = b.conceal.active       ? b.conceal       : a.conceal
-    strikethrough = b.strikethrough.active ? b.strikethrough : a.strikethrough
+    base = b.reset.active && b.reset.on ? Crayon() : a
+    fg            = b.fg.active            ? b.fg            : base.fg
+    bg            = b.bg.active            ? b.bg            : base.bg
+    reset         = b.reset.active         ? b.reset         : base.reset
+    bold          = b.bold.active          ? b.bold          : base.bold
+    faint         = b.faint.active         ? b.faint         : base.faint
+    italics       = b.italics.active       ? b.italics       : base.italics
+    underline     = b.underline.active     ? b.underline     : base.underline
+    blink         = b.blink.active         ? b.blink         : base.blink
+    negative      = b.negative.active      ? b.negative      : base.negative
+    conceal       = b.conceal.active       ? b.conceal       : base.conceal
+    strikethrough = b.strikethrough.active ? b.strikethrough : base.strikethrough
 
     return Crayon(fg,
                   bg,

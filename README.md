@@ -9,7 +9,7 @@
 
 *Crayons* is a package that makes it simple to write strings in different colors and styles to terminals.
 It supports the 16 system colors, both the 256 color and 24 bit true color extensions, and the different text styles available to terminals.
-The package is designed to perform well, have no dependencies and load fast (about 10 ms load time after precompilation).
+The package is designed to perform well, have no dependencies and load quickly.
 
 
 ## Installation
@@ -25,34 +25,36 @@ import Pkg; Pkg.add("Crayons")
 A `Crayon` is created with the keyword only constructor:
 
 ```julia
-Crayon(foreground,
-       background,
-       reset,
-       bold,
-       faint,
-       italics,
-       underline,
-       blink,
-       negative,
-       conceal,
-       strikethrough)
+Crayon(; foreground = nothing,
+         background = nothing,
+         reset = nothing,
+         bold = nothing,
+         faint = nothing,
+         italics = nothing,
+         underline = nothing,
+         blink = nothing,
+         negative = nothing,
+         conceal = nothing,
+         strikethrough = nothing)
 ```
 
-The `foreground` and `background` argument can be of three types:
+The `foreground` and `background` arguments support four forms:
 
 * A `Symbol` representing a color.
   The available colors are `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `light_gray`, `default`, `dark_gray`, `light_red`, `light_green`, `light_yellow`, `light_blue`, `light_magenta`, `light_cyan` and `white`.
   To see the colors in action, try `Crayons.test_system_colors()`.
   These colors are supported by almost all terminals.
-* An `Integer` between 0 and 255.
+* An `Integer` between 0 and 255. `UInt32` values are interpreted as hexadecimal RGB colors as described below.
   This will use the 256 color ANSI escape codes.
   To see what number corresponds to what color and if your terminal supports 256 colors, use `Crayons.test_256_colors(codes=true)`.
 * A `Tuple` of three `Integer`s, all between 0 and 255.
   This will be interpreted as a `(r, g, b)` 24 bit color.
-  To test your terminals support for 24 bit colors, use `Crayons.test_24bit_colors(codes=false)`.
+  To test your terminal's support for 24-bit colors, use `Crayons.test_24bit_colors(codes=false)`.
   The support for this is currently quite limited but is being improved in terminals continuously, see [here](https://gist.github.com/XVilka/8346728).
 * A `UInt32` representing a color given in hexadecimal format.
   Will be converted to the corresponding RGB format.
+
+Out-of-range color indices, RGB channels, and hexadecimal values throw an `ArgumentError`.
 
 The other keyword arguments are all of `Bool` type and determine whether the corresponding style should be explicitly enabled or disabled:
 
@@ -68,10 +70,11 @@ The other keyword arguments are all of `Bool` type and determine whether the cor
 
 To see text with the different styles active, use `Crayons.test_styles()`
 
-By using `nothing` for any of the keyword arguments, that color or style is inactive and is thus neither actively enable or disabled.
+By using `nothing` for any of the keyword arguments, that color or style is inactive and is thus neither actively enabled nor disabled.
 
 For convenience, `Crayon`s for the foreground / background version of the 16 system colors as well as the different styles are pre-made and can be found in the `Crayons.Box` module.
 They have the name `<COLOR_NAME>_<BG/FG>` for the foreground/background colors and `<STYLE>` for the different styles (note the uppercase).
+There is also a `RESET` crayon that resets all colors and styles.
 Calling `using` on the `Crayons.Box` module will bring all these into global scope.
 
 #### String macros
@@ -82,9 +85,9 @@ These are written using `crayon"[[fg:]<col>] [bg:<col>] ([[!]<style>] ...)"` whe
 * `<col>` is a color given as a hexadecimal number, `(r,g,b)` tuple (no spaces), a number 0-255, or one of the 16 named colors.
 * `<style>` is one of the styles.
 * `!` means that the style is explicitly disabled.
-* `(<style> ...)` means a repeated number of styles, spearated by spaces.
+* `(<style> ...)` means a repeated number of styles, separated by spaces.
 
-A few examples of using the string macros and the equivalent constructor is shown below
+A few examples of using the string macros and the equivalent constructor are shown below.
 
 ```julia
 crayon"red" # Crayon(foreground = :red)
@@ -129,20 +132,32 @@ print(GREEN_BG("We ",
      )
 ```
 
+A `Crayon` can also be applied to a string with `*`, and the resulting objects concatenate with strings and each other:
+
+```julia
+print(crayon"red" * "In red. " * crayon"blue"("In blue. ") * "Normal.")
+```
+
 **Note:** In order for the color sequences to be printed, the Julia REPL needs to have colors activated,
 either by Julia automatically detecting terminal support or by starting Julia with the `--color=yes` argument.
-Alternatively, if the environment variable `FORCE_COLOR` exist, or `Crayons.force_color(::Bool)` has been enabled,
+Alternatively, if the environment variable `FORCE_COLOR` exists, or `Crayons.force_color(::Bool)` has been enabled,
 color sequences are printed no matter what. Also, since relatively few terminals support full 24-bit colors,
 it is possible to activate 256 color mode which converts the 24-bit crayon to a 256 color crayon when printed.
-This is done by either defining the variable environment `FORCE_256_COLORS` or by calling `Crayons.force_256_colors(::Bool)`.
-In addition, some systems have problems even with 256 colors, it is possible to convert to one of the 16 system colors
+This is done by either defining the environment variable `FORCE_256_COLORS` or by calling `Crayons.force_256_colors(::Bool)`.
+In addition, some systems have problems even with 256 colors. It is possible to convert 24-bit and 256-color crayons to one of the 16 system colors
 by defining the variable `FORCE_SYSTEM_COLORS` or by calling `Crayons.force_system_colors(::Bool)`. Note that 16 colors (8 + 8 light versions) is a quite small colorspace so the conversion is unlikely to be very good.
+The environment variables are read once when the package is loaded; to change the behavior at runtime, use the `force_*` functions.
+
+If the `IO` object being printed to has the `:color` property set (e.g. via an `IOContext`), that property takes
+precedence over the global color setting. This can be used to force escape sequences into a string regardless of
+terminal support: `sprint(print, crayon; context = :color => true)`.
 
 ## Merging `Crayon`s
 
 Two or more `Crayon`s can be merged resulting in a new `Crayon` with all the properties of the merged ones.
 This is done with the function `merge(crayons::Crayon...)` or by multiplying `Crayon`s using `*`.
 If two `Crayon`s specify the same property then the property of the last `Crayon` in the argument list is used:
+If a later `Crayon` has `reset = true`, earlier properties are cleared before its other properties are applied.
 
 ```julia
 using Crayons.Box
@@ -163,8 +178,14 @@ print(GREEN_FG(
 
 ## Misc
 
-The function `inv` on a `Crayon` returns a `Crayon` that undos what the `Crayon` in the argument to `inv` does.
+The function `inv` on a `Crayon` returns a `Crayon` that undoes what the `Crayon` in the argument to `inv` does.
 As an example, `inv(Crayon(bold = true))` returns a `Crayon` that disables bold.
+
+If a background color is active when a newline is printed, many terminals paint the rest of the next line with
+that background ("background color erase"). Print the resetting crayon *before* the newline to avoid this.
+
+Crayons do not survive line breaks in messages passed to the Julia logging system (`@info` etc.), since the
+logger emits its own color codes for the prefix of each line. Apply the crayon to each line separately if needed.
 
 ## Advanced nesting of colors and styles
 
@@ -184,7 +205,7 @@ print(pop!(stack), "normal text")
 A `CrayonStack` can also be created in `incremental` mode by calling `CrayonStack(incremental = true)`.
 In that case, the `CrayonStack` will only print the changes that are needed to go from the previous text state to the new state,
 which results in less color codes being printed.
-However, note that this means that the `CrayonStack` need to be printed to the output buffer for **all** changes that are made to it
+However, note that this means that the `CrayonStack` needs to be printed to the output buffer for **all** changes that are made to it
 (i.e. both when `push!` and `pop!` are used).
 The example below shows a working example where all the changes to the stack are printed and another example, which gives wrong result,
 since one change is not printed.
@@ -218,4 +239,3 @@ https://github.com/Aerlinger/AnsiColor.jl
 ### Author
 
 Kristoffer Carlsson — [@KristofferC](https://github.com/KristofferC)
-

@@ -43,7 +43,8 @@ UNDERLINE,
 BLINK,
 NEGATIVE,
 CONCEAL,
-STRIKETHROUGH
+STRIKETHROUGH,
+RESET
 
 const BLACK_FG         = Crayon(foreground = :black         )
 const RED_FG           = Crayon(foreground = :red           )
@@ -89,5 +90,7 @@ const BLINK            = Crayon(blink         = true)
 const NEGATIVE         = Crayon(negative      = true)
 const CONCEAL          = Crayon(conceal       = true)
 const STRIKETHROUGH    = Crayon(strikethrough = true)
+
+const RESET            = Crayon(reset         = true)
 
 end

@@ -14,8 +14,7 @@ macro crayon_str(str::String)
     fgcol = ANSIColor()
     bgcol = ANSIColor()
 
-    for word in split(str, " ")
-        length(word) == 0 && continue
+    for word in split(str)
         token = word
         enabled = true
         parse_state = :style
@@ -92,29 +91,26 @@ macro crayon_str(str::String)
     )
 end
 
+const HEX_COLOR_REGEX = r"^(?:#|0[xX])?([0-9a-fA-F]{6})$"
+const RGB_COLOR_REGEX = r"^\(([0-9]+),([0-9]+),([0-9]+)\)$"
+
 function _parse_color_string(token::AbstractString)
-    if length(token) >= 6
-        tok_hex = token
-        startswith(token, "#") && (tok_hex = token[2:end])
-        !startswith(token, "0x") && (tok_hex = "0x" * tok_hex)
-        nhex = tryparse(UInt32, tok_hex)
-        nhex !== nothing && return _parse_color(nhex)
+    hexmatch = match(HEX_COLOR_REGEX, token)
+    if hexmatch !== nothing
+        return _parse_color(parse(UInt32, hexmatch.captures[1]; base = 16))
     end
 
     nint = tryparse(Int, token)
     nint !== nothing && return _parse_color(nint)
-    reg = r"\(([0-9]*),([0-9]*),([0-9]*)\)"
-    m = match(reg, token)
+
+    m = match(RGB_COLOR_REGEX, token)
     if m !== nothing
-        r = m.captures[1]::SubString{String}
-        g = m.captures[2]::SubString{String}
-        b = m.captures[3]::SubString{String}
-        return _parse_color(parse.(Int, (r, g, b)))
+        rgb = ntuple(i -> parse(Int, m.captures[i]), 3)
+        return _parse_color(rgb)
     end
 
-    if Symbol(token) in keys(COLORS)
-        return _parse_color(Symbol(token))
-    end
+    color = Symbol(token)
+    haskey(COLORS, color) && return _parse_color(color)
 
     throw(ArgumentError("could not parse $token as a color"))
 end

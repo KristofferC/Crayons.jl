@@ -2,7 +2,7 @@ using Crayons
 using Crayons.Box
 using Test
 
-withenv("FORCE_COLOR" => true) do
+Crayons.force_color(true)
 
 Crayons.print_logo()
 Crayons.test_system_colors(IOBuffer())
@@ -30,6 +30,16 @@ Crayons.test_256_colors(IOBuffer())
     @test string(Crayon(reset = true)) == "\e[0m"
     @test string(Crayon(reset = false)) == ""
     @test string(Crayon()) == ""
+end
+
+@testset "IO color context" begin
+    Crayons.force_color(false)
+    c = Crayon(foreground = :red)
+    @test sprint(print, c; context = :color => true) == "\e[31m"
+    @test sprint(print, c; context = :color => false) == ""
+    @test sprint(show, c; context = :color => false) == "\\e[31m"
+    @test !occursin('\e', sprint(show, c; context = :color => false))
+    Crayons.force_color(true)
 end
 
 @testset "16 colors" begin
@@ -71,13 +81,46 @@ end
     @test string(crayon"bg:0xff00ff fg:0xffffff") == string(Crayon(foreground = 0xffffff, background = 0xff00ff))
     @test string(crayon"bg:red bold !underline") == string(Crayon(background = :red, bold = true, underline = false))
     @test string(crayon"bg:(1,2,3) fg:(2,1,5)") == string(Crayon(background = (1,2,3), foreground = (2,1,5)))
+    @test string(crayon"ABCDEF") == string(Crayon(foreground = 0xabcdef))
+    @test string(crayon"") == ""
+    @test string(Crayons.@crayon_str("bold\tred")) == string(Crayon(foreground = :red, bold = true))
+
+    for token in ("1234567", "0x1234567", "(1,2,3)junk", "x(1,2,3)", "(,,)", "256", "-1")
+        @test_throws ArgumentError Crayons._parse_color_string(token)
+    end
+end
+
+@testset "constructor validation" begin
+    @test Crayon(foreground = Int8(1)) == Crayon(foreground = 1)
+    @test Crayon(foreground = UInt8(1)) == Crayon(foreground = 1)
+    @test Crayon(foreground = BigInt(1)) == Crayon(foreground = 1)
+    @test_throws ArgumentError Crayon(foreground = 256)
+    @test_throws ArgumentError Crayon(foreground = -1)
+    @test_throws ArgumentError Crayon(foreground = (0, 0, 256))
+    @test_throws ArgumentError Crayon(foreground = (-1, 0, 0))
+    @test_throws ArgumentError Crayon(foreground = UInt32(0x01000000))
+    @test_throws ArgumentError Crayon(foreground = :unknown)
 end
 
 @testset "force 256 colors" begin
-    withenv("FORCE_256_COLORS" => true) do
-        @test string(crayon"(0,0,255)") == string(Crayon(foreground = 21))
-        @test string(crayon"fg:(0,0,255) bg:(255,0,255)") == string(Crayon(foreground = 21, background = 201))
-    end
+    Crayons.force_256_colors(true)
+    @test string(crayon"(0,0,255)") == string(Crayon(foreground = 21))
+    @test string(crayon"fg:(0,0,255) bg:(255,0,255)") == string(Crayon(foreground = 21, background = 201))
+    Crayons.force_256_colors(false)
+end
+
+@testset "force system colors" begin
+    Crayons.force_system_colors(true)
+    @test string(Crayon(foreground = 208)) == string(Crayon(foreground = :light_yellow))
+    @test string(Crayon(foreground = (255, 135, 0))) == string(Crayon(foreground = :light_yellow))
+    @test string(Crayon(foreground = (255, 135, 0), background = 21)) ==
+          string(Crayon(foreground = :light_yellow, background = :light_blue))
+
+    # system colors take precedence over 256 colors
+    Crayons.force_256_colors(true)
+    @test string(Crayon(foreground = (255, 135, 0))) == string(Crayon(foreground = :light_yellow))
+    Crayons.force_256_colors(false)
+    Crayons.force_system_colors(false)
 end
 
 @testset "CrayonStack" begin
@@ -100,6 +143,13 @@ end
     pop!(cs) # Popping the foreground = :red
     @test string(cs) == string(Crayon(foreground = :default, background = :default, bold = false, italics = false, underline = false, strikethrough = false, blink = false, conceal = false, negative = false, faint = false))
     @test_throws ArgumentError pop!(cs)
+
+    reset_stack = CrayonStack()
+    push!(reset_stack, Crayon(foreground = :red))
+    push!(reset_stack, Crayon(reset = true))
+    @test string(reset_stack) == string(Crayon(foreground = :default, background = :default, reset = true, bold = false, italics = false, underline = false, strikethrough = false, blink = false, conceal = false, negative = false, faint = false))
+    pop!(reset_stack)
+    @test string(reset_stack) == string(Crayon(foreground = :red, background = :default, bold = false, italics = false, underline = false, strikethrough = false, blink = false, conceal = false, negative = false, faint = false))
 end
 
 @testset "incremental mode CrayonStack" begin
@@ -120,17 +170,26 @@ end
     @test string(cs) == ""
     pop!(cs) # State change: fg = default
     @test string(cs) == string(Crayon(foreground = :default))
+
+    reset = Crayon(reset = true)
+    push!(cs, Crayon(foreground = :red))
+    @test string(cs) == string(Crayon(foreground = :red))
+    push!(cs, reset)
+    @test string(cs) == string(reset)
+    pop!(cs)
+    @test string(cs) == string(Crayon(foreground = :red))
 end
 
 @testset "merge" begin
     @test string(merge(Crayon(foreground = :blue, background = :red))) == string(Crayon(foreground = :blue, background = :red))
     @test string(merge(Crayon(foreground = :blue), Crayon(background = :red)))  == string(Crayon(foreground = :blue, background = :red))
     @test string(merge(Crayon(foreground = :blue), Crayon(background = :red), Crayon(bold = true))) == string(Crayon(foreground = :blue, background = :red, bold = true))
-    @test string(merge(Crayon(foreground = :blue), Crayon(background = :red), Crayon(bold = true))) == string(Crayon(foreground = :blue, background = :red, bold = true))
     @test string(merge(Crayon(foreground = :red), Crayon(foreground = :blue))) == string(Crayon(foreground = :blue))
     @test string(merge(Crayon(foreground = :red), Crayon(negative = true))) == string(Crayon(foreground = :red, negative = true))
-
-    string(BLACK_BG * WHITE_FG * BOLD) == string(Crayon(foreground = :white, background = :black, bold = true))
+    @test string(BLACK_BG * WHITE_FG * BOLD) == string(Crayon(foreground = :white, background = :black, bold = true))
+    @test string(merge(Crayon(foreground = :red, bold = true), Crayon(reset = true))) == string(Crayon(reset = true))
+    @test string(merge(Crayon(foreground = :red), Crayon(reset = true, underline = true))) ==
+          string(Crayon(reset = true, underline = true))
 end
 
 @testset "call overloading" begin
@@ -145,6 +204,25 @@ end
     @test string("normal", BOLD*UNDERLINE("bold_underline", ITALICS*RED_FG("everything"), "bold_underline"), "normal") ==
         string("normal", Crayon(bold=true, underline=true),"bold_underline", Crayon(italics=true, foreground=:red), "everything", Crayon(italics=false, foreground=:default),
          "bold_underline", Crayon(bold=false, underline=false), "normal")
+
+    reset = Crayon(reset = true)
+    @test string(RED_FG("a", reset("b"), "c")) ==
+          string(RED_FG, "a", reset, "b", RED_FG, "c", inv(RED_FG))
+end
+
+@testset "Box RESET" begin
+    @test RESET === Crayon(reset = true)
+    @test string(RESET) == "\e[0m"
+end
+
+@testset "string concatenation" begin
+    @test string(RED_FG * "red") == string(RED_FG("red"))
+    @test string("a " * RED_FG("red")) == string("a ", RED_FG, "red", inv(RED_FG))
+    @test string(RED_FG("red") * " b") == string(RED_FG, "red", inv(RED_FG), " b")
+    @test string(RED_FG("red") * BLUE_FG("blue")) ==
+          string(RED_FG, "red", inv(RED_FG), BLUE_FG, "blue", inv(BLUE_FG))
+    @test string(RED_FG * "red " * BLUE_FG("blue") * " normal") ==
+          string(RED_FG, "red ", inv(RED_FG), BLUE_FG, "blue", inv(BLUE_FG), " normal")
 end
 
 @testset "8bit - 256 colors" begin
@@ -208,6 +286,8 @@ end
     @test crayon"dadada" |> Crayons.to_256_colors == crayon"253"
     @test crayon"e4e4e4" |> Crayons.to_256_colors == crayon"254"
     @test crayon"eeeeee" |> Crayons.to_256_colors == crayon"255"
+    @test crayon"7f7f7f" |> Crayons.to_256_colors == crayon"244"
+    @test crayon"f8f8f8" |> Crayons.to_256_colors == crayon"231"
 end
 
 @testset "8bit ansi approximation" begin
@@ -225,7 +305,7 @@ end
     @test Crayons.to_256_colors(crayon"(255,102,255)") == crayon"207"
     @test Crayons.to_256_colors(crayon"(255,135,0)") == crayon"208"
     @test Crayons.to_256_colors(crayon"(187,0,187)") == crayon"127"
-    @test Crayons.to_256_colors(crayon"(50,100,50)") == crayon"59"
+    @test Crayons.to_256_colors(crayon"(50,100,50)") == crayon"238"
     @test Crayons.to_256_colors(crayon"(102,102,0)") == crayon"58"
     @test Crayons.to_256_colors(crayon"(200,50,0)") == crayon"166"
     @test Crayons.to_256_colors(crayon"(0,51,102)") == crayon"23"
@@ -255,7 +335,7 @@ end
     @test crayon"20b2aa" |> Crayons.to_256_colors == crayon"37"
     @test crayon"228b22" |> Crayons.to_256_colors == crayon"28"
     @test crayon"2e8b57" |> Crayons.to_256_colors == crayon"29"
-    @test crayon"2f4f4f" |> Crayons.to_256_colors == crayon"23"
+    @test crayon"2f4f4f" |> Crayons.to_256_colors == crayon"238"
     @test crayon"32cd32" |> Crayons.to_256_colors == crayon"77"
     @test crayon"3cb371" |> Crayons.to_256_colors == crayon"71"
     @test crayon"40e0d0" |> Crayons.to_256_colors == crayon"80"
@@ -264,12 +344,12 @@ end
     @test crayon"483d8b" |> Crayons.to_256_colors == crayon"60"
     @test crayon"48d1cc" |> Crayons.to_256_colors == crayon"80"
     @test crayon"4b0082" |> Crayons.to_256_colors == crayon"54"
-    @test crayon"556b2f" |> Crayons.to_256_colors == crayon"58"
+    @test crayon"556b2f" |> Crayons.to_256_colors == crayon"239"
     @test crayon"5f9ea0" |> Crayons.to_256_colors == crayon"73"
     @test crayon"6495ed" |> Crayons.to_256_colors == crayon"69"
     @test crayon"663399" |> Crayons.to_256_colors == crayon"60"
     @test crayon"66cdaa" |> Crayons.to_256_colors == crayon"79"
-    @test crayon"696969" |> Crayons.to_256_colors == crayon"59"
+    @test crayon"696969" |> Crayons.to_256_colors == crayon"242"
     @test crayon"6a5acd" |> Crayons.to_256_colors == crayon"62"
     @test crayon"6b8e23" |> Crayons.to_256_colors == crayon"64"
     @test crayon"708090" |> Crayons.to_256_colors == crayon"66"
@@ -297,7 +377,7 @@ end
     @test crayon"9acd32" |> Crayons.to_256_colors == crayon"113"
     @test crayon"a0522d" |> Crayons.to_256_colors == crayon"130"
     @test crayon"a52a2a" |> Crayons.to_256_colors == crayon"124"
-    @test crayon"a9a9a9" |> Crayons.to_256_colors == crayon"145"
+    @test crayon"a9a9a9" |> Crayons.to_256_colors == crayon"248"
     @test crayon"add8e6" |> Crayons.to_256_colors == crayon"152"
     @test crayon"adff2f" |> Crayons.to_256_colors == crayon"154"
     @test crayon"afeeee" |> Crayons.to_256_colors == crayon"159"
@@ -314,38 +394,37 @@ end
     @test crayon"cd853f" |> Crayons.to_256_colors == crayon"173"
     @test crayon"d2691e" |> Crayons.to_256_colors == crayon"166"
     @test crayon"d2b48c" |> Crayons.to_256_colors == crayon"180"
-    @test crayon"d3d3d3" |> Crayons.to_256_colors == crayon"188"
+    @test crayon"d3d3d3" |> Crayons.to_256_colors == crayon"252"
     @test crayon"d8bfd8" |> Crayons.to_256_colors == crayon"182"
     @test crayon"da70d6" |> Crayons.to_256_colors == crayon"170"
     @test crayon"daa520" |> Crayons.to_256_colors == crayon"178"
     @test crayon"db7093" |> Crayons.to_256_colors == crayon"168"
     @test crayon"dc143c" |> Crayons.to_256_colors == crayon"161"
-    @test crayon"dcdcdc" |> Crayons.to_256_colors == crayon"188"
+    @test crayon"dcdcdc" |> Crayons.to_256_colors == crayon"253"
     @test crayon"dda0dd" |> Crayons.to_256_colors == crayon"182"
     @test crayon"deb887" |> Crayons.to_256_colors == crayon"180"
     @test crayon"e0ffff" |> Crayons.to_256_colors == crayon"195"
-    @test crayon"e6e6fa" |> Crayons.to_256_colors == crayon"189"
+    @test crayon"e6e6fa" |> Crayons.to_256_colors == crayon"255"
     @test crayon"e9967a" |> Crayons.to_256_colors == crayon"174"
     @test crayon"ee82ee" |> Crayons.to_256_colors == crayon"213"
     @test crayon"eee8aa" |> Crayons.to_256_colors == crayon"223"
     @test crayon"f08080" |> Crayons.to_256_colors == crayon"210"
     @test crayon"f0e68c" |> Crayons.to_256_colors == crayon"222"
     @test crayon"f0f8ff" |> Crayons.to_256_colors == crayon"231"
-    @test crayon"f0fff0" |> Crayons.to_256_colors == crayon"231"
+    @test crayon"f0fff0" |> Crayons.to_256_colors == crayon"255"
     @test crayon"f0ffff" |> Crayons.to_256_colors == crayon"231"
     @test crayon"f4a460" |> Crayons.to_256_colors == crayon"215"
     @test crayon"f5deb3" |> Crayons.to_256_colors == crayon"223"
     @test crayon"f5f5dc" |> Crayons.to_256_colors == crayon"230"
-    @test crayon"f5f5f5" |> Crayons.to_256_colors == crayon"231"
+    @test crayon"f5f5f5" |> Crayons.to_256_colors == crayon"255"
     @test crayon"f5fffa" |> Crayons.to_256_colors == crayon"231"
     @test crayon"f8f8ff" |> Crayons.to_256_colors == crayon"231"
     @test crayon"fa8072" |> Crayons.to_256_colors == crayon"209"
     @test crayon"faebd7" |> Crayons.to_256_colors == crayon"230"
-    @test crayon"faf0e6" |> Crayons.to_256_colors == crayon"230"
+    @test crayon"faf0e6" |> Crayons.to_256_colors == crayon"255"
     @test crayon"fafad2" |> Crayons.to_256_colors == crayon"230"
     @test crayon"fdf5e6" |> Crayons.to_256_colors == crayon"230"
     @test crayon"ff0000" |> Crayons.to_256_colors == crayon"196"
-    @test crayon"ff00ff" |> Crayons.to_256_colors == crayon"201"
     @test crayon"ff00ff" |> Crayons.to_256_colors == crayon"201"
     @test crayon"ff1493" |> Crayons.to_256_colors == crayon"198"
     @test crayon"ff4500" |> Crayons.to_256_colors == crayon"202"
@@ -366,7 +445,7 @@ end
     @test crayon"ffebcd" |> Crayons.to_256_colors == crayon"230"
     @test crayon"ffefd5" |> Crayons.to_256_colors == crayon"230"
     @test crayon"fff0f5" |> Crayons.to_256_colors == crayon"231"
-    @test crayon"fff5ee" |> Crayons.to_256_colors == crayon"231"
+    @test crayon"fff5ee" |> Crayons.to_256_colors == crayon"255"
     @test crayon"fff8dc" |> Crayons.to_256_colors == crayon"230"
     @test crayon"fffacd" |> Crayons.to_256_colors == crayon"230"
     @test crayon"fffaf0" |> Crayons.to_256_colors == crayon"231"
@@ -383,4 +462,15 @@ end
     @test crayon"ff0000" |> Crayons.to_system_colors == Crayon(foreground = :light_red)
 end
 
-end # withenv
+@testset "load-time environment variables" begin
+    code = "using Crayons; print(string(Crayon(foreground = :red)))"
+    cmd = `$(Base.julia_cmd()) --color=no --startup-file=no --project=$(Base.active_project()) -e $code`
+    @test read(addenv(cmd, "FORCE_COLOR" => "1"), String) == "\e[31m"
+    env = copy(ENV)
+    delete!(env, "FORCE_COLOR")
+    @test read(setenv(cmd, env), String) == ""
+end
+
+@testset "ambiguities" begin
+    @test isempty(Test.detect_ambiguities(Crayons; recursive = true))
+end
