@@ -14,8 +14,11 @@ jobs:
       matrix:
         julia-version: [1]
         os: [ubuntu-latest]
+        # `subdir` is the package directory relative to the repository root:
+        # use `.` for standard layouts, or the sub-package path for monorepos
         package:
-          - {user: ronisbr, repo: PrettyTables.jl}
+          - {user: ronisbr, repo: PrettyTables.jl, subdir: .}
+          - {user: JuliaPlots, repo: UnicodePlots.jl, subdir: UnicodePlots}
 
     steps:
       - uses: actions/checkout@v7
@@ -29,9 +32,13 @@ jobs:
           repository: ${{ matrix.package.user }}/${{ matrix.package.repo }}
           path: downstream
       - name: Load this and run the downstream tests
-        shell: julia --color=yes --project=downstream {0}
+        # NOTE: `shell` does not support the `matrix` context, hence the `env` indirection
+        shell: julia --color=yes {0}
+        env:
+          DOWNSTREAM_PROJECT: downstream/${{ matrix.package.subdir }}
         run: |
           using Pkg
+          Pkg.activate(ENV["DOWNSTREAM_PROJECT"])
           try
             # force it to use this PR's version of the package
             Pkg.develop(PackageSpec(path="."))  # resolver may fail with main deps
